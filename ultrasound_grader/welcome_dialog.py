@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import (
     QRadioButton, QPushButton
 )
 
+# Create welcome dialog page for user to select admin or grader mode
 class WelcomeDialog(QDialog):
     def __init__(self):
         super().__init__()
