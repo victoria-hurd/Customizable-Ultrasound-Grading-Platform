@@ -4,7 +4,7 @@ from welcome_dialog import WelcomeDialog
 
 def main():
     app = QApplication(sys.argv)
-    dialog = WelcomeDialog()
+    dialog = WelcomeDialog() # Start application with WelcomeDialog
     dialog.show()
     sys.exit(app.exec())
 
