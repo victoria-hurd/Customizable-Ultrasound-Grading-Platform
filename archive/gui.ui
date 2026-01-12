@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1055</width>
+    <height>731</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QPushButton" name="saveDataButton">
+   <property name="geometry">
+    <rect>
+     <x>670</x>
+     <y>590</y>
+     <width>211</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Enter Answers and Save Data</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="playButton">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>640</y>
+     <width>80</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Play</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pauseButton">
+   <property name="geometry">
+    <rect>
+     <x>460</x>
+     <y>640</y>
+     <width>80</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Pause</string>
+   </property>
+  </widget>
+  <widget class="QVideoWidget" name="video_widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>110</y>
+     <width>511</width>
+     <height>471</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="openButton">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>80</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="loadedFileLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>60</y>
+     <width>511</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>[No file loaded]</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="EBScaleImage">
+   <property name="geometry">
+    <rect>
+     <x>580</x>
+     <y>100</y>
+     <width>391</width>
+     <height>211</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>App Data/Modified EB Scale.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="EBScaleLabel">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>70</y>
+     <width>431</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Eftedal-Brubakk Grading Scale&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="successfulSaveLabel">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>670</x>
+     <y>660</y>
+     <width>211</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Data saved successfully. </string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>600</x>
+     <y>330</y>
+     <width>369</width>
+     <height>236</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="inputGradesLabel">
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Input Grades&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="firstRestGradeGrid">
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="firstRestLabel">
+        <property name="text">
+         <string>Rest 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="firstRest0Button">
+        <property name="text">
+         <string>0</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="firstRest1Button">
+        <property name="text">
+         <string>1</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QRadioButton" name="firstRest2Button">
+        <property name="text">
+         <string>2</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QRadioButton" name="firstRest3Button">
+        <property name="text">
+         <string>3</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QRadioButton" name="firstRest4Button">
+        <property name="text">
+         <string>4</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QRadioButton" name="firstRest5Button">
+        <property name="text">
+         <string>5</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QRadioButton" name="firstRest6Button">
+        <property name="text">
+         <string>6</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QRadioButton" name="firstRest7Button">
+        <property name="text">
+         <string>7</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest1</string>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="rightFlexGradeGrid">
+      <item row="1" column="3">
+       <widget class="QRadioButton" name="rightFlex3Button">
+        <property name="text">
+         <string>3</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QRadioButton" name="rightFlex4Button">
+        <property name="text">
+         <string>4</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QRadioButton" name="rightFlex6Button">
+        <property name="text">
+         <string>6</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QRadioButton" name="rightFlex5Button">
+        <property name="text">
+         <string>5</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QRadioButton" name="rightFlex2Button">
+        <property name="text">
+         <string>2</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="rightFlex1Button">
+        <property name="text">
+         <string>1</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="rightFlex0Button">
+        <property name="text">
+         <string>0</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QRadioButton" name="rightFlex7Button">
+        <property name="text">
+         <string>7</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRightFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="rightFlexLabel">
+        <property name="text">
+         <string>Right Flex:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="leftFlexGradeGrid">
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="leftFlexLabel">
+        <property name="text">
+         <string>Left Flex:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="leftFlex0Button">
+        <property name="text">
+         <string>0</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="leftFlex1Button">
+        <property name="text">
+         <string>1</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QRadioButton" name="leftFlex2Button">
+        <property name="text">
+         <string>2</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QRadioButton" name="leftFlex3Button">
+        <property name="text">
+         <string>3</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QRadioButton" name="leftFlex4Button">
+        <property name="text">
+         <string>4</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QRadioButton" name="leftFlex5Button">
+        <property name="text">
+         <string>5</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QRadioButton" name="leftFlex6Button">
+        <property name="text">
+         <string>6</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QRadioButton" name="leftFlex7Button">
+        <property name="text">
+         <string>7</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupLeftFlex</string>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="secondRestGradeGrid">
+      <item row="1" column="4">
+       <widget class="QRadioButton" name="secondRest4Button">
+        <property name="text">
+         <string>4</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QRadioButton" name="secondRest7Button">
+        <property name="text">
+         <string>7</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QRadioButton" name="secondRest2Button">
+        <property name="text">
+         <string>2</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="secondRest1Button">
+        <property name="text">
+         <string>1</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QRadioButton" name="secondRest5Button">
+        <property name="text">
+         <string>5</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QRadioButton" name="secondRest3Button">
+        <property name="text">
+         <string>3</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="secondRest0Button">
+        <property name="text">
+         <string>0</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QRadioButton" name="secondRest6Button">
+        <property name="text">
+         <string>6</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroupRest2</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="secondRestLabel">
+        <property name="text">
+         <string>Rest 2:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QVideoWidget</class>
+   <extends>QWidget</extends>
+   <header>PyQt6.QtMultimediaWidgets</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="buttonGroupRest1"/>
+  <buttongroup name="buttonGroupRightFlex"/>
+  <buttongroup name="buttonGroupLeftFlex"/>
+  <buttongroup name="buttonGroupRest2"/>
+ </buttongroups>
+</ui>
