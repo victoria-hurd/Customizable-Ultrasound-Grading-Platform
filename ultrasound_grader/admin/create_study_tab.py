@@ -1,8 +1,6 @@
-from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QFileDialog, QLineEdit,
-    QScrollArea, QGroupBox, QMessageBox
-)
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                             QPushButton, QFileDialog, QLineEdit,
+                             QScrollArea, QGroupBox, QMessageBox)
 from data.schema import load_question_schema
 import os
 
@@ -14,8 +12,11 @@ class CreateStudyTab(QWidget):
         self._build_ui()
 
     def _build_ui(self):
-        main_layout = QVBoxLayout()
-        # Get study info from admin: study name, video folder
+        outer_layout = QVBoxLayout()
+
+        content_layout = QVBoxLayout()
+
+        # get info about the study being created (name, data folder)
         study_box = QGroupBox("Study Information")
         study_layout = QVBoxLayout()
 
@@ -27,7 +28,7 @@ class CreateStudyTab(QWidget):
 
         folder_layout = QHBoxLayout()
         self.image_folder_label = QLabel("No folder selected")
-        folder_btn = QPushButton("Select Data Folder")
+        folder_btn = QPushButton("Select Image / Video Folder")
         folder_btn.clicked.connect(self.select_image_folder)
 
         folder_layout.addWidget(folder_btn)
@@ -36,7 +37,7 @@ class CreateStudyTab(QWidget):
         study_layout.addLayout(folder_layout)
         study_box.setLayout(study_layout)
 
-        # Get grading criteria schema generated from schema.py
+        # Get questions as parsed by schema.py
         question_box = QGroupBox("Grading Questions")
         question_layout = QVBoxLayout()
 
@@ -59,12 +60,30 @@ class CreateStudyTab(QWidget):
         question_layout.addWidget(scroll)
         question_box.setLayout(question_layout)
 
-        # Adding widgets to main layout
-        main_layout.addWidget(study_box)
-        main_layout.addWidget(question_box)
-        main_layout.addStretch()
+        content_layout.addWidget(study_box)
+        content_layout.addWidget(question_box)
+        content_layout.addStretch()
 
-        self.setLayout(main_layout)
+        scroll_container = QWidget()
+        scroll_container.setLayout(content_layout)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(scroll_container)
+
+        outer_layout.addWidget(scroll_area)
+
+        action_bar = QHBoxLayout()
+        action_bar.addStretch()
+
+        create_btn = QPushButton("Create Study")
+        create_btn.clicked.connect(self.create_study_clicked)
+
+        action_bar.addWidget(create_btn)
+        outer_layout.addLayout(action_bar)
+
+        self.setLayout(outer_layout)
+
 
     def select_image_folder(self):
         # Open dialog to select input data folder
@@ -114,3 +133,10 @@ class CreateStudyTab(QWidget):
         self.question_summary_label.setText(
             f"Detected {len(self.questions)} grading questions"
         )
+
+        def create_study_clicked(self):
+            QMessageBox.information(
+                self,
+                "Create Study",
+                "TBD WORKFLOWWWW"
+            )
