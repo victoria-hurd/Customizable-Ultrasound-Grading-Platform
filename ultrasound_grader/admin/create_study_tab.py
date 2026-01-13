@@ -134,9 +134,9 @@ class CreateStudyTab(QWidget):
             f"Detected {len(self.questions)} grading questions"
         )
 
-        def create_study_clicked(self):
-            QMessageBox.information(
-                self,
-                "Create Study",
-                "TBD WORKFLOWWWW"
-            )
+    def create_study_clicked(self):
+        QMessageBox.information(
+            self,
+            "Create Study",
+            "TBD WORKFLOWWWW"
+        )
