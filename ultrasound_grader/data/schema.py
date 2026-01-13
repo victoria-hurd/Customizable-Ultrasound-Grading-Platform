@@ -5,37 +5,42 @@ import pandas as pd
 # Instructions provided in README and in Excel template file
 
 def load_question_schema(path):
-    # Read Excel file without headers
-    df = pd.read_excel(path, header=None)
+    df = pd.read_excel(path)
+
+    required_columns = {"Grading Criteria", "Question Type"}
+    if not required_columns.issubset(df.columns):
+        raise ValueError(
+            "Spreadsheet must contain 'Grading Criteria' and 'Question Type' columns"
+        )
 
     questions = []
-    option_row_idx = None
 
-    # Find option header row: contains "Option 1"
-    for i, row in df.iterrows():
-        if any(str(cell).strip().lower() == "option 1" for cell in row):
-            option_row_idx = i
-            break
-
-    if option_row_idx is None:
-        raise ValueError("Could not find option header row")
-
-    # Question rows start AFTER option row
-    for i in range(option_row_idx + 1, len(df)):
-        row = df.iloc[i]
-        question_text = str(row.iloc[0]).strip()
+    for idx, row in df.iterrows():
+        question_text = str(row["Grading Criteria"]).strip()
 
         if not question_text or question_text.lower() == "nan":
             continue
 
-        # Extract options
-        options = [
-            str(cell).strip()
-            for cell in row.iloc[1:]
-            if pd.notna(cell)
-        ]
+        question_type = str(row["Question Type"]).strip().lower()
 
-        question_type = "select" if options else "annotate"
+        if question_type not in {"select", "annotate"}:
+            raise ValueError(
+                f"Invalid question type '{question_type}' "
+                f"for question: {question_text}"
+            )
+
+        options = []
+        if question_type == "select":
+            for col in df.columns:
+                if col.startswith("Option"):
+                    cell = row[col]
+                    if pd.notna(cell):
+                        options.append(str(cell).strip())
+
+            if not options:
+                raise ValueError(
+                    f"Select question has no options: {question_text}"
+                )
 
         questions.append({
             "question_id": len(questions) + 1,
@@ -44,4 +49,8 @@ def load_question_schema(path):
             "options": options
         })
 
+    if not questions:
+        raise ValueError("No valid questions detected")
+
     return questions
+
