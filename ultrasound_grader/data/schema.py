@@ -41,10 +41,7 @@ def load_question_schema(path):
     # Parse questions from rows below the found header
     questions = []
     for i in range(header_row_idx + 1, len(df)):
-            print(question_types)
-            print(f"Processing row index: {i}")
             row = df.iloc[i]
-            print(f"{row}")
             question_text = row.iloc[question_col]
             if pd.isna(question_text):
                 continue
@@ -52,7 +49,6 @@ def load_question_schema(path):
             if not question_text:
                 continue
             question_type = str(row.iloc[type_col])
-            print(f"Question type: {question_type}")
             if question_type not in question_types:
                 print(question_types)
                 raise ValueError(
@@ -61,7 +57,6 @@ def load_question_schema(path):
                 )
             
             options = df.iloc[i, option_cols]
-            print(f"Options raw data: {options}")
 
             options = []
             if question_type == question_types[0]: # "single select"
@@ -77,7 +72,6 @@ def load_question_schema(path):
                         f"'{question_text}' (row {i + 1})"
                     )
 
-            print(options)
             questions.append({
                 "question_id": len(questions) + 1,
                 "question_text": question_text,
