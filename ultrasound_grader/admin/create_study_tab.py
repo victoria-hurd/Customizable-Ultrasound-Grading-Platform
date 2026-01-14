@@ -1,10 +1,19 @@
+import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QFileDialog, QLineEdit,
                              QScrollArea, QGroupBox, QMessageBox,
-                             QListWidget, QRadioButton, QSpinBox)
-from PyQt6.QtCore import pyqtSignal
+                             QListWidget, QRadioButton, QSpinBox,
+                             QButtonGroup, QProgressBar, QFrame,
+                             QApplication)
+from PyQt6.QtCore import pyqtSignal, Qt 
+from zipfile import ZipFile
+import shutil
+import random
+import pandas as pd
 from data.schema import load_question_schema
-import os
+from admin.study_builder import (detect_media_files, 
+                                 assign_files_to_graders, 
+                                 create_master_study_csv)
 
 # Create the study building tab for admin users
 class CreateStudyTab(QWidget):
@@ -43,19 +52,17 @@ class CreateStudyTab(QWidget):
         grader_layout = QVBoxLayout()
         self.grader_widget = GraderInputWidget()
         grader_layout.addWidget(self.grader_widget)
-        self.grader_widget.graders_changed.connect(
-        self.update_grading_summary
-        )
+        self.grader_widget.graders_changed.connect(self.update_grading_summary)
         grader_box.setLayout(grader_layout)
 
         # Add the grader split and assignment info
         split_box = QGroupBox("Grading Assignment")
         split_layout = QVBoxLayout()
         self.grader_split_widget = GraderSplitWidget()
+        self.grader_split_widget.assignment_changed.connect(self.update_grading_summary)
+        self.grader_widget.graders_changed.connect(self.update_grading_summary)
         split_layout.addWidget(self.grader_split_widget)
-        self.grader_split_widget.assignment_changed.connect(
-            self.update_grading_summary
-        )
+        self.grader_split_widget.assignment_changed.connect(self.update_grading_summary)
         split_box.setLayout(split_layout)
 
         # Show live look at grader split
@@ -70,23 +77,17 @@ class CreateStudyTab(QWidget):
         # Get questions as parsed by schema.py
         question_box = QGroupBox("Grading Questions")
         question_layout = QVBoxLayout()
-
         question_btn = QPushButton("Upload Question Spreadsheet")
         question_btn.clicked.connect(self.load_questions)
-
         self.question_summary_label = QLabel("No question file loaded")
-
         question_layout.addWidget(question_btn)
         question_layout.addWidget(self.question_summary_label)
-
         self.question_list_layout = QVBoxLayout()
         scroll_widget = QWidget()
         scroll_widget.setLayout(self.question_list_layout)
-
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(scroll_widget)
-
         question_layout.addWidget(scroll)
         question_box.setLayout(question_layout)
 
@@ -116,7 +117,6 @@ class CreateStudyTab(QWidget):
         outer_layout.addLayout(action_bar)
 
         self.setLayout(outer_layout)
-
 
     def select_image_folder(self):
         # Open dialog to select input data folder
@@ -170,15 +170,77 @@ class CreateStudyTab(QWidget):
         )
 
     def create_study_clicked(self):
-        # get grader assignments from inputs
-        assignment_settings = self.grader_split_widget.get_assignment_mode()
+        study_name = self.study_name_input.text().strip()
+        data_folder = self.image_folder_label.text()
+        graders = self.grader_widget.get_graders()
+        assignment = self.grader_split_widget.get_assignment_mode()
+        repeat_count = assignment["repeat_count"]
 
-        # temporary
-        QMessageBox.information(
-            self,
-            "Create Study",
-            "TBD WORKFLOWWWW"
-        )
+        if not study_name or not data_folder or not graders:
+            QMessageBox.warning(self, "Missing Info", "Please enter study name, folder, and graders.")
+            return
+
+        media_files = self._count_media_files_list()
+        if not media_files:
+            QMessageBox.warning(self, "No Files", "No valid image/video files found in folder.")
+            return
+
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        studies_root = os.path.join(project_root, "Studies")
+        os.makedirs(studies_root, exist_ok=True)
+
+        study_folder = os.path.join(studies_root, study_name)
+        os.makedirs(study_folder, exist_ok=True)
+
+        completed_folder = os.path.join(study_folder, "Completed Reviews")
+        os.makedirs(completed_folder, exist_ok=True)
+
+        # Create master study CSV in the study folder
+        master_csv_path = os.path.join(study_folder, f"{study_name}_master_study.csv")
+
+        assignments = []
+        deid_counter = 1
+
+        if assignment["mode"] == "all_graders_all_images":
+            # Each grader gets all files
+            for f in media_files:
+                    deid_name = f"MEDIA_{deid_counter:04d}{os.path.splitext(f)[1]}"
+                    for grader in graders:
+                        # Repeat files if repeat_count > 1
+                        for i in range(repeat_count):
+                            assignments.append({
+                                "original_filename": f,
+                                "deidentified_filename": deid_name,
+                                "assigned_grader": grader,
+                                "repeat_num": i+1
+                            })
+                    deid_counter += 1
+
+        else:
+            # Split evenly among graders
+            random.shuffle(media_files)
+            num_graders = len(graders)
+            for idx, f in enumerate(media_files):
+                grader = graders[idx % num_graders]
+                deid_name = f"MEDIA_{deid_counter:04d}{os.path.splitext(f)[1]}"
+                # Repeat files if repeat_count > 1
+                for i in range(repeat_count):
+                    assignments.append({
+                        "original_filename": f,
+                        "deidentified_filename": deid_name,
+                        "assigned_grader": grader,
+                        "repeat_num": i+1
+                    })
+                deid_counter += 1
+
+        import pandas as pd
+        df = pd.DataFrame(assignments)
+        df.to_csv(master_csv_path, index=False)
+
+        self.review_type = "nominal"
+
+        # Show success panel with summary, study folder, and grader releases button
+        self.show_study_success(study_name, study_folder, data_folder, graders, assignment, repeat_count, len(media_files))
 
     def _count_media_files(self):
         folder = self.image_folder_label.text()
@@ -191,45 +253,232 @@ class CreateStudyTab(QWidget):
             if os.path.splitext(f)[1].lower() in valid_exts
         )
     
+    def _count_media_files_list(self):
+        folder = self.image_folder_label.text()
+        if not os.path.isdir(folder):
+            return []
+
+        valid_exts = {".mp4", ".avi", ".mov", ".mkv", ".jpg", ".png"}
+        return [f for f in os.listdir(folder) if os.path.splitext(f)[1].lower() in valid_exts]
+
     # Live-update the grading summary based on current inputs
     def update_grading_summary(self):
+        # Get number of files and graders from inputs
         num_files = self._count_media_files()
         graders = self.grader_widget.get_graders()
         num_graders = len(graders)
-
+        # Display number of detected files
         self.detected_files_label.setText(
             f"Detected files: {num_files}"
         )
-
+        # Display number of inputted graders
         if num_files == 0 or num_graders == 0:
             self.per_grader_label.setText(
                 "Each grader will review: —"
             )
             return
-
+        # Get the assignment mode and repeat settings
         assignment = self.grader_split_widget.get_assignment_mode()
-
-        repeat_multiplier = assignment["repeat_count"]
-
+        # If no repeat set, then repeat is 1 review per image per grader
+        repeat_multiplier = assignment["repeat_count"] if assignment["repeat"] else 1
+        # Calculate number of images per grader
+        # Mode 1: All graders grade all images (with repeats if set)
         if assignment["mode"] == "all_graders_all_images":
-            per_grader = num_files
-            mode_text = "All graders grade all images"
+            per_grader = num_files * repeat_multiplier
+            # Build summary string
+            summary_lines = []
+            for g in graders:
+                summary_lines.append(f"{g}: {per_grader}")
+            summary_text = "All graders grade all images:\n" + "\n".join(summary_lines)
+            if assignment["repeat"]:
+                summary_text += f"\nRepeated {repeat_multiplier}x"
+            self.per_grader_label.setText(summary_text)
         else:
-            per_grader = num_files // num_graders
+            # Mode 2: Split evenly among graders (with repeats if set)
+            base_count = num_files // num_graders
             remainder = num_files % num_graders
-            mode_text = "Split evenly"
-            if remainder:
-                mode_text += f" (+{remainder} distributed)"
+            # Assign counts per grader
+            grader_counts = [base_count] * num_graders
+            # Distribute extra images to graders in order
+            for i in range(remainder):
+                grader_counts[i] += 1
+            # Apply repeat multiplier
+            if assignment["repeat"]:
+                grader_counts = [c * repeat_multiplier for c in grader_counts]
+            # Build summary string
+            summary_lines = []
+            for g, count in zip(graders, grader_counts):
+                summary_lines.append(f"{g}: {count}")
+            summary_text = "Split among graders:\n" + "\n".join(summary_lines)
+            if assignment["repeat"]:
+                summary_text += f"\nRepeated {repeat_multiplier}x"
+            self.per_grader_label.setText(summary_text)
 
-        per_grader *= repeat_multiplier
+    def show_study_success(self, study_name, study_folder, data_folder, graders, assignment, repeat_count, num_files):
+        # Hide all existing widgets in the tab (inputs, labels, etc.)
+        central_layout = self.layout()
+        for i in reversed(range(central_layout.count())):
+            item = central_layout.itemAt(i)
+            if item.widget():
+                item.widget().hide()
+            elif item.layout():
+                # hide widgets inside nested layouts
+                for j in range(item.layout().count()):
+                    sub_item = item.layout().itemAt(j)
+                    if sub_item.widget():
+                        sub_item.widget().hide()
 
+        # Create info string
+        summary_str = f"Study Name: {study_name}\nStudy Folder: {study_folder}\nData Folder: {data_folder}\nNumber of Media Files: {num_files}\nNumber of Graders: {len(graders)}\n"
+        # Success string
+        success_str = "Study created successfully!\n\n"
+
+        # Assignment summary below
+        grader_assign = "Grader assignments:\n"
+        if assignment["mode"] == "all_graders_all_images":
+            for g in graders:
+                grader_assign += f"  {g}: {num_files * repeat_count} images\n"
+        else:
+            base_count = num_files // len(graders)
+            remainder = num_files % len(graders)
+            counts = [base_count] * len(graders)
+            for i in range(remainder):
+                counts[i] += 1
+            counts = [c * repeat_count if assignment["repeat"] else c for c in counts]
+            for g, c in zip(graders, counts):
+                grader_assign += f"  {g}: {c} images\n"
         if assignment["repeat"]:
-            mode_text += f", repeated {repeat_multiplier}×"
+            grader_assign += f"Repeat enabled: {repeat_count}x"
 
-        self.per_grader_label.setText(
-            f"Each grader will review: {per_grader} ({mode_text})"
-        )
+        # Create label for next step information
+        info_str = "\nThe next step is to create grader release folders, which contain the media assigned to each grader and a per-grader master spreadsheet. These folders are zipped such that they can be sent to graders for review, named accordingly based on the provided grader names. Note that the images will be presented in a randomized, deidentified manner. \n"
+        
+        # Create widget
+        success_widget = QLabel(success_str+summary_str+grader_assign+info_str)
+        success_widget.setWordWrap(True)
+        success_widget.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
+        # Add to layout
+        success_frame = QFrame()
+        success_layout = QVBoxLayout(success_frame)
+        success_layout.addWidget(success_widget)
+
+        # Button to move to next step
+        self.current_study_folder = study_folder
+        self.create_release_btn = QPushButton("Create Grader Release Folders")
+        self.create_release_btn.clicked.connect(self.create_grader_release_folders)
+        success_layout.addWidget(self.create_release_btn)
+
+        # Add the frame to the main tab layout
+        self.layout().addWidget(success_frame)
+
+    def create_grader_release_folders(self):
+        # Master study CSV
+        study_name = self.study_name_input.text().strip()
+        master_csv = os.path.join(self.current_study_folder, f"{study_name}_master_study.csv")
+        if not os.path.exists(master_csv):
+            QMessageBox.critical(self, "Error", "Master study CSV not found.")
+            return
+
+        # Read master CSV
+        df = pd.read_csv(master_csv)
+
+        # Create grader releases root folder
+        releases_folder = os.path.join(self.current_study_folder, "Grader Releases")
+        os.makedirs(releases_folder, exist_ok=True)
+
+        graders = df["assigned_grader"].unique()
+
+        # Progress bar
+        progress = QProgressBar()
+        progress.setMaximum(len(graders))
+        self.layout().addWidget(progress)
+
+        for i, grader in enumerate(graders, start=1):
+            grader_folder = os.path.join(releases_folder, f"{grader}_{study_name}")
+            raw_folder = os.path.join(grader_folder, "Raw Data")
+            os.makedirs(raw_folder, exist_ok=True)
+
+            grader_df = df[df["assigned_grader"] == grader].copy()
+
+            # Copy assigned files with de-identified names
+            for _, row in grader_df.iterrows():
+                src_file = os.path.join(self.image_folder_label.text(), row["original_filename"])
+                dest_file = os.path.join(raw_folder, row["deidentified_filename"])
+                if os.path.exists(src_file):
+                    shutil.copy(src_file, dest_file)
+                else:
+                    print(f"Warning: source file not found: {src_file}")
+
+            # Create per-grader master CSV
+            grader_df = grader_df.drop(columns=["original_filename"]).copy()
+            grader_df["review_type"] = self.review_type
+            grader_csv_path = os.path.join(
+                grader_folder,
+                f"{study_name}_questions.csv"
+            )
+            # Add questions, make empty columns for answers
+            for q in self.questions:
+                grader_df[f"Q{q['question_id']}"] = ""
+            grader_df.to_csv(grader_csv_path, index=False)
+
+            # Zip the grader folder
+            zip_path = os.path.join(releases_folder, f"{grader}_{study_name}.zip")
+            with ZipFile(zip_path, 'w') as zipf:
+                for root, _, files in os.walk(grader_folder):
+                    for file in files:
+                        abs_path = os.path.join(root, file)
+                        arcname = os.path.relpath(abs_path, start=releases_folder)
+                        zipf.write(abs_path, arcname)
+
+            progress.setValue(i)
+
+        # Show success panel 
+        self.show_release_success(study_name, self.current_study_folder, graders)
+
+    def show_release_success(self, study_name, study_folder, graders):
+        # Hide all existing widgets in the tab (inputs, labels, etc.)
+        central_layout = self.layout()
+        for i in reversed(range(central_layout.count())):
+            item = central_layout.itemAt(i)
+            if item.widget():
+                item.widget().hide()
+            elif item.layout():
+                # hide widgets inside nested layouts
+                for j in range(item.layout().count()):
+                    sub_item = item.layout().itemAt(j)
+                    if sub_item.widget():
+                        sub_item.widget().hide()
+
+        # Create info string
+        grader_string = ", ".join(str(x) for x in graders)
+        summary_str = f"Study Name: {study_name}\nStudy Folder: {study_folder}\nGrader Releases Created: {grader_string}\n"
+        # Success string
+        success_str = "Releases created successfully!\n\n"
+
+        # Create label for next step information
+        info_str = "\nThe next step is to send the release folders to their respective graders. Depending on the size of your study, these may need to be sent via large file transfer service or physically via thumb drive. \n"
+        
+        # Create widget
+        success_widget = QLabel(success_str + summary_str + info_str)
+        success_widget.setWordWrap(True)
+        success_widget.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+
+        # Add to layout
+        success_frame = QFrame()
+        success_layout = QVBoxLayout(success_frame)
+        success_layout.addWidget(success_widget)
+
+        # Button to close application
+        self.exit_button = QPushButton("Exit Application")
+        self.exit_button.clicked.connect(QApplication.instance().quit)
+
+        success_layout.addSpacing(20)
+        success_layout.addWidget(self.exit_button)
+        success_layout.addStretch()
+
+        # Add all to main layout
+        self.layout().addWidget(success_frame)
 
 class GraderInputWidget(QWidget):
     graders_changed = pyqtSignal()
@@ -303,84 +552,84 @@ class GraderSplitWidget(QWidget):
     assignment_changed = pyqtSignal()
     def __init__(self):
         super().__init__()
+        layout = QHBoxLayout(self)
 
-        layout = QVBoxLayout(self)
-
-        # Button creation
-        self.all_grade_all_radio = QRadioButton(
-            "All graders grade all images"
-        )
-        self.split_radio = QRadioButton(
-            "Split images among graders"
-        )
-        self.split_evenly_radio = QRadioButton(
-            "Split evenly"
-        )
-
+        # LEFT SIDE: Grading assignment options
+        # Set up the left side, with grading modes
+        left_layout = QVBoxLayout()
+        self.all_grade_all_radio = QRadioButton("All graders grade all images")
+        self.split_radio = QRadioButton("Split images among graders")
+        self.split_evenly_radio = QRadioButton("Split evenly")
+        # Create button group to manage exclusivity
+        self.assignment_group = QButtonGroup(self)
+        self.assignment_group.addButton(self.all_grade_all_radio)
+        self.assignment_group.addButton(self.split_radio)
+        self.assignment_group.addButton(self.split_evenly_radio)
         # set defaults
         self.all_grade_all_radio.setChecked(True)
         self.split_evenly_radio.setEnabled(False)
+        # Connect toggles and emit signals when changed
+        # self.split_radio.toggled.connect(self.split_evenly_radio.setEnabled)
+        # self.all_grade_all_radio.toggled.connect(self.assignment_changed.emit)
+        # self.split_radio.toggled.connect(self.assignment_changed.emit)
+        # Add to left side of HBox
+        left_layout.addWidget(self.all_grade_all_radio)
+        left_layout.addWidget(self.split_radio)
+        left_layout.addWidget(self.split_evenly_radio)
 
-        # emit signals when toggled to update the live summary
-        self.split_radio.toggled.connect(
-            self.split_evenly_radio.setEnabled
-        )
-
-        self.all_grade_all_radio.toggled.connect(
-            self.assignment_changed.emit
-        )
-        self.split_radio.toggled.connect(
-            self.assignment_changed.emit
-        )
-
-        # Add widgets to layout
-        layout.addWidget(self.all_grade_all_radio)
-        layout.addWidget(self.split_radio)
-        layout.addWidget(self.split_evenly_radio)
-
-        # Add repeats for intra-rater reliability studies
-        layout.addSpacing(10)
-        layout.addWidget(QLabel("Repeat images per grader?"))
-
+        # RIGHT SIDE: Repeat options
+        # Set up the right side, with repeat options for intra-rater reliability
+        right_layout = QVBoxLayout()
+        right_layout.addWidget(QLabel("Repeat images per grader?"))
         self.repeat_no_radio = QRadioButton("No")
         self.repeat_yes_radio = QRadioButton("Yes")
-        self.repeat_no_radio.setChecked(True)
-
-        layout.addWidget(self.repeat_no_radio)
-        layout.addWidget(self.repeat_yes_radio)
-
-        self.repeat_count_label = QLabel(
-            "Number of times each image should be shown:"
-        )
+        self.repeat_no_radio.setChecked(True) # set default
+        # Put repeat radios in a button group
+        self.repeat_group = QButtonGroup(self)
+        self.repeat_group.addButton(self.repeat_no_radio)
+        self.repeat_group.addButton(self.repeat_yes_radio)
+        # Add to right side of HBox
+        right_layout.addWidget(self.repeat_no_radio)
+        right_layout.addWidget(self.repeat_yes_radio)
+        # Add repeat count box
+        self.repeat_count_label = QLabel("Number of times each image should be shown:")
         self.repeat_count_spin = QSpinBox()
         self.repeat_count_spin.setMinimum(2)
         self.repeat_count_spin.setMaximum(10)
         self.repeat_count_spin.setValue(2)
-
         self.repeat_count_label.setEnabled(False)
         self.repeat_count_spin.setEnabled(False)
-
-        layout.addWidget(self.repeat_count_label)
-        layout.addWidget(self.repeat_count_spin)
-
+        # Add to right side of HBox
+        right_layout.addWidget(self.repeat_count_label)
+        right_layout.addWidget(self.repeat_count_spin)
         # Enable repeats if user selects yes
-        self.repeat_yes_radio.toggled.connect(
-            self.repeat_count_label.setEnabled
-        )
-        self.repeat_yes_radio.toggled.connect(
-            self.repeat_count_spin.setEnabled
-        )
+        self.repeat_yes_radio.toggled.connect(self.repeat_count_label.setEnabled)
+        self.repeat_yes_radio.toggled.connect(self.repeat_count_spin.setEnabled)
+        # Connect toggles and emit signals when changed
+        # self.repeat_no_radio.toggled.connect(self.assignment_changed.emit)
+        # self.repeat_yes_radio.toggled.connect(self.assignment_changed.emit)
+        # self.repeat_count_spin.valueChanged.connect(self.assignment_changed.emit)
 
-        # Emit signals if repeats changed
-        self.repeat_no_radio.toggled.connect(
-            self.assignment_changed.emit
-        )
-        self.repeat_yes_radio.toggled.connect(
-            self.assignment_changed.emit
-        )
-        self.repeat_count_spin.valueChanged.connect(
-            self.assignment_changed.emit
-        )
+        # COMBINE
+        # Wiring
+        self.split_radio.toggled.connect(lambda checked: (
+            self.split_evenly_radio.setEnabled(checked),
+            self.assignment_changed.emit()
+        ))
+        self.all_grade_all_radio.toggled.connect(self.assignment_changed.emit)
+
+        self.repeat_yes_radio.toggled.connect(lambda checked: (
+            self.repeat_count_spin.setEnabled(checked),
+            self.assignment_changed.emit()
+        ))
+        self.repeat_no_radio.toggled.connect(self.assignment_changed.emit)
+
+        self.repeat_count_spin.valueChanged.connect(self.assignment_changed.emit)
+        # Add left and right layouts to main horizontal layout
+        layout.addLayout(left_layout)
+        layout.addSpacing(40)
+        layout.addLayout(right_layout)
+
 
     def get_assignment_mode(self):
         return {
