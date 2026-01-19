@@ -50,7 +50,6 @@ def load_question_schema(path):
                 continue
             question_type = str(row.iloc[type_col])
             if question_type not in question_types:
-                print(question_types)
                 raise ValueError(
                     f"Invalid question type '{question_type}' "
                     f"in row {i + 1}"
@@ -62,7 +61,6 @@ def load_question_schema(path):
             if question_type == question_types[0]: # "single select"
                 for col in option_cols:
                     cell = row.iloc[col]
-                    print(f"Option cell at col {col}: {cell}")
                     if pd.notna(cell):
                         options.append(str(cell).strip())
 
@@ -78,7 +76,6 @@ def load_question_schema(path):
                 "question_type": question_type,
                 "options": options
             })
-            print(questions)
 
     if not questions:
         raise ValueError("No valid questions found below header row")
