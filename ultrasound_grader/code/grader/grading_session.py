@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QButtonGroup, QSlider, QMessageBox, QFileDialog)
 from PyQt6.QtCore import Qt
 from grader.video_player import VideoPlayer
-from data.schema import load_question_schema
+from ultrasound_grader.code.schema import load_question_schema
 
 
 class GradingSessionTab(QWidget):

@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from welcome_dialog import WelcomeDialog
+from ultrasound_grader.code.welcome_dialog import WelcomeDialog
 from admin.admin_window import AdminMainWindow
 from grader.grader_window import GraderMainWindow
 

@@ -10,7 +10,7 @@ from zipfile import ZipFile
 import shutil
 import random
 import pandas as pd
-from data.schema import load_question_schema
+from ultrasound_grader.code.schema import load_question_schema
 from admin.study_builder import (detect_media_files, 
                                  assign_files_to_graders, 
                                  create_master_study_csv)
