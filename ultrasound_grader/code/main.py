@@ -1,26 +1,14 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from ultrasound_grader.code.welcome_dialog import WelcomeDialog
-from admin.admin_window import AdminMainWindow
-from grader.grader_window import GraderMainWindow
+from code.utils.app_paths import ensure_app_directories
+from code.ui.landing_page import LandingPage
 
 def main():
+    ensure_app_directories()
+
     app = QApplication(sys.argv)
-    welcome = WelcomeDialog() # Start application with WelcomeDialog
-    admin_window = AdminMainWindow()
-    grader_window = GraderMainWindow()
-
-    welcome.launch_admin.connect(lambda: (
-        admin_window.show(),
-        welcome.hide()
-    ))
-
-    welcome.launch_grader.connect(lambda: (
-        grader_window.show(),
-        welcome.hide()
-    ))
-
-    welcome.show()
+    window = LandingPage()
+    window.show()
     sys.exit(app.exec())
 
 if __name__ == "__main__":
