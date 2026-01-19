@@ -3,3 +3,4 @@
 *.pyc
 ultrasound_grader/admin/Studies/*
 Input Data/*
+UI Testing/*
