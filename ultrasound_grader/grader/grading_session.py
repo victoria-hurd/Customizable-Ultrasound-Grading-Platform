@@ -119,11 +119,6 @@ class GradingSessionTab(QWidget):
 
         question_container.addWidget(scroll_area)
 
-        # Exit button at the bottom
-        self.exit_btn = QPushButton("Exit Grading")
-        self.exit_btn.clicked.connect(self.exit_grading)
-        question_container.addWidget(self.exit_btn)
-
         grading_layout.addLayout(question_container, stretch=1)  # Take 1/4 of horizontal space
 
         self.grading_widget.setVisible(False)
