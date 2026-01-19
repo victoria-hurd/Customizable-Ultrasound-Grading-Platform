@@ -1,0 +1,33 @@
+- Ultrasound Video Grader/
+    - Admin Studies/
+        - [Study 1]/
+            - [Creation]/
+                - Master Study Info CSV
+                - Grade Requests CSV
+                - Question List Excel
+                - Grader Releases/
+                    - [Grader-Specific Zip File w Name]
+                    - [Grader-Specific Folder w Name]/
+                        - Output Grade Data/
+                            - [grader name]_[study name]_grade_data.csv [populated after first grading session]
+                        - Input Study Data/
+                            - [grader name]_[study name]_grade_request.csv
+                            - [study name]_Master_Study_Info.csv
+                            - grading questions csv
+                            - Raw Video Data/
+                                - [Raw Video Files]
+            - [Results]/
+        - [Study 2]/
+        - [etc]/
+    - Grader Studies/
+        - [Study 1]/
+            - Output Grade Data/
+                - [grader name]_[study name]_grade_data.csv [populated after first grading session]
+            - Input Study Data/
+                - [grader name]_[study name]_grade_request.csv
+                - [study name]_Master_Study_Info.csv
+                - grading questions csv
+                - Raw Video Data/
+                    - [Raw Video Files]
+        - [Study 2]/
+        - [etc]/

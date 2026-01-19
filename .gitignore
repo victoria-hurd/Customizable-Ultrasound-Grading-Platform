@@ -1,2 +1,6 @@
 .vscode/
 .DS_Store
+*.pyc
+ultrasound_grader/admin/Studies/*
+Input Data/*
+UI Testing/*
