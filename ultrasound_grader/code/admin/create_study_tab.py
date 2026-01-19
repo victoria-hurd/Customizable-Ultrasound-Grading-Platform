@@ -1,4 +1,5 @@
 import os
+import json
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QFileDialog, QLineEdit,
                              QScrollArea, QGroupBox, QMessageBox,
@@ -10,17 +11,33 @@ from zipfile import ZipFile
 import shutil
 import random
 import pandas as pd
-from ultrasound_grader.code.schema import load_question_schema
-from admin.study_builder import (detect_media_files, 
+from code.utils.schema import load_question_schema
+from code.admin.study_builder import (detect_media_files, 
                                  assign_files_to_graders, 
                                  create_master_study_csv)
+from code.utils.app_paths import get_admin_studies_dir
+from ultrasound_grader.code.admin import study_metadata
 
 # Create the study building tab for admin users
 class CreateStudyTab(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(
+        self,
+        parent=None,
+        mode="new",                    # "new" | "edit" | "duplicate"
+        study_name=None,
+        source_study_path=None
+    ):
+        super().__init__(parent)
+
+        self.mode = mode
+        self.study_name = study_name
+        self.source_study_path = source_study_path
+
         self.questions = []
         self._build_ui()
+
+        if self.mode in ("edit", "duplicate"):
+            self.load_existing_study()
 
     def _build_ui(self):
         outer_layout = QVBoxLayout()
@@ -175,9 +192,19 @@ class CreateStudyTab(QWidget):
         graders = self.grader_widget.get_graders()
         assignment = self.grader_split_widget.get_assignment_mode()
         repeat_count = assignment["repeat_count"]
+        questions = self.questions
 
-        if not study_name or not data_folder or not graders:
-            QMessageBox.warning(self, "Missing Info", "Please enter study name, folder, and graders.")
+        if not study_name:
+            QMessageBox.warning(self, "Missing Info", "Please enter study name.")
+            return
+        if not data_folder:
+            QMessageBox.warning(self, "Missing Info", "Please enter video data folder.")
+            return
+        if not graders:
+            QMessageBox.warning(self, "Missing Info", "Please enter grader names.")
+            return
+        if not questions:
+            QMessageBox.warning(self, "Missing Info", "Please enter grading question spreadsheet.")
             return
 
         media_files = self._count_media_files_list()
@@ -185,18 +212,19 @@ class CreateStudyTab(QWidget):
             QMessageBox.warning(self, "No Files", "No valid image/video files found in folder.")
             return
 
-        project_root = os.path.dirname(os.path.abspath(__file__))
-        studies_root = os.path.join(project_root, "Studies")
-        os.makedirs(studies_root, exist_ok=True)
+        # If study is new, create folder
+        if not self.source_study_path:
+            self.source_study_path = os.path.dirname(os.path.join(get_admin_studies_dir(),study_name))
 
-        study_folder = os.path.join(studies_root, study_name)
-        os.makedirs(study_folder, exist_ok=True)
+        # Make study folder if it doesn't exist yet
+        os.makedirs(self.source_study_path, exist_ok=True)
 
-        completed_folder = os.path.join(study_folder, "Completed Reviews")
-        os.makedirs(completed_folder, exist_ok=True)
+        # Make empty results folder
+        results_folder = os.path.join(self.source_study_path, "Results")
+        os.makedirs(results_folder, exist_ok=True)
 
-        # Create master study CSV in the study folder
-        master_csv_path = os.path.join(study_folder, f"{study_name}_master_study.csv")
+        # OUTPUT 1: All Grader Requests Master CSV
+        all_requests_csv_path = os.path.join(self.source_study_path, f"all_grader_requests_{study_name}.csv")
 
         assignments = []
         deid_counter = 1
@@ -235,12 +263,25 @@ class CreateStudyTab(QWidget):
 
         import pandas as pd
         df = pd.DataFrame(assignments)
-        df.to_csv(master_csv_path, index=False)
+        df.to_csv(all_requests_csv_path, index=False)
 
         self.review_type = "nominal"
 
+        # OUTPUT 2: Study Metadata
+        study_metadata = {
+            "study_name": study_name,
+            "data_folder": data_folder,
+            "graders": graders,
+            "assignment_mode": assignment["mode"],
+            "repeat_count": repeat_count,
+            "questions": questions
+        }
+        metadata_path = os.path.join(self.source_study_path, "study_metadata.json")
+        with open(metadata_path, "w") as f:
+            json.dump(study_metadata, f, indent=4)
+
         # Show success panel with summary, study folder, and grader releases button
-        self.show_study_success(study_name, study_folder, data_folder, graders, assignment, repeat_count, len(media_files))
+        self.show_study_success(study_name, self.source_study_path, data_folder, graders, assignment, repeat_count, len(media_files),)
 
     def _count_media_files(self):
         folder = self.image_folder_label.text()
