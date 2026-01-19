@@ -16,14 +16,13 @@ from code.admin.study_builder import (detect_media_files,
                                  assign_files_to_graders, 
                                  create_master_study_csv)
 from code.utils.app_paths import get_admin_studies_dir
-from ultrasound_grader.code.admin import study_metadata
 
 # Create the study building tab for admin users
 class CreateStudyTab(QWidget):
     def __init__(
         self,
         parent=None,
-        mode="new",                    # "new" | "edit" | "duplicate"
+        mode="new",                    # "new" | "edit" 
         study_name=None,
         source_study_path=None
     ):
@@ -36,7 +35,7 @@ class CreateStudyTab(QWidget):
         self.questions = []
         self._build_ui()
 
-        if self.mode in ("edit", "duplicate"):
+        if self.mode == "edit":
             self.load_existing_study()
 
     def _build_ui(self):
@@ -49,6 +48,7 @@ class CreateStudyTab(QWidget):
 
         self.study_name_input = QLineEdit()
         self.study_name_input.setPlaceholderText("Enter study name")
+        self.study_name_input.textChanged.connect(self.update_source_study_path)
 
         study_layout.addWidget(QLabel("Study Name"))
         study_layout.addWidget(self.study_name_input)
@@ -213,8 +213,9 @@ class CreateStudyTab(QWidget):
             return
 
         # If study is new, create folder
-        if not self.source_study_path:
-            self.source_study_path = os.path.dirname(os.path.join(get_admin_studies_dir(),study_name))
+        if self.source_study_path == None:
+            self.source_study_path = os.path.join(get_admin_studies_dir(),study_name)
+        print(self.source_study_path)
 
         # Make study folder if it doesn't exist yet
         os.makedirs(self.source_study_path, exist_ok=True)
@@ -416,13 +417,13 @@ class CreateStudyTab(QWidget):
     def create_grader_release_folders(self):
         # Master study CSV
         study_name = self.study_name_input.text().strip()
-        master_csv = os.path.join(self.current_study_folder, f"{study_name}_master_study.csv")
-        if not os.path.exists(master_csv):
-            QMessageBox.critical(self, "Error", "Master study CSV not found.")
+        requests_csv = os.path.join(self.current_study_folder, f"all_grader_requests_{study_name}.csv")
+        if not os.path.exists(requests_csv):
+            QMessageBox.critical(self, "Error", "Master requests study CSV not found.")
             return
 
         # Read master CSV
-        df = pd.read_csv(master_csv)
+        df = pd.read_csv(requests_csv)
 
         # Create grader releases root folder
         releases_folder = os.path.join(self.current_study_folder, "Grader Releases")
@@ -456,15 +457,22 @@ class CreateStudyTab(QWidget):
             grader_df["review_type"] = self.review_type
             grader_csv_path = os.path.join(
                 grader_folder,
-                f"{study_name}_questions.csv"
+                f"{grader}_{study_name}_grade_request.csv"
             )
-            # Add questions, make empty columns for answers
-            for q in self.questions:
-                grader_df[f"Q{q['question_id']}"] = ""
+            # # Add questions, make empty columns for answers
+            # for q in self.questions:
+            #     grader_df[f"Q{q['question_id']}"] = ""
+            
             grader_df.to_csv(grader_csv_path, index=False)
 
+            # Copy over the metadata file
+            metadata_file = os.path.join(self.current_study_folder, "study_metadata.json")
+            if os.path.exists(metadata_file):
+                shutil.copy(metadata_file, os.path.join(grader_folder, "study_metadata.json"))
+            else:
+                print(f"Warning: source file not found: {metadata_file}")
             # Zip the grader folder
-            zip_path = os.path.join(releases_folder, f"{grader}_{study_name}.zip")
+            zip_path = os.path.join(releases_folder, f"{grader}_{study_name}_release.zip")
             with ZipFile(zip_path, 'w') as zipf:
                 for root, _, files in os.walk(grader_folder):
                     for file in files:
@@ -520,6 +528,79 @@ class CreateStudyTab(QWidget):
 
         # Add all to main layout
         self.layout().addWidget(success_frame)
+
+    def load_existing_study(self):
+        # Load existing study metadata and populate fields
+        metadata_path = os.path.join(self.source_study_path, "study_metadata.json")
+        if not os.path.exists(metadata_path):
+            QMessageBox.critical(self, "Error", "Study metadata file not found. Creating new study instead.")
+            return
+
+        with open(metadata_path, "r") as f:
+            metadata = json.load(f)
+
+        # Populate fields
+        self.study_name_input.setText(metadata.get("study_name", ""))
+        self.image_folder_label.setText(metadata.get("data_folder", ""))
+
+        # Populate graders
+        graders = metadata.get("graders", [])
+        for grader in graders:
+            self.grader_widget.list_widget.addItem(grader)
+
+        # Populate assignment mode
+        assignment_mode = metadata.get("assignment_mode", "all_graders_all_images")
+        repeat_count = metadata.get("repeat_count", 1)
+
+        if assignment_mode == "all_graders_all_images":
+            self.grader_split_widget.all_grade_all_radio.setChecked(True)
+        else:
+            self.grader_split_widget.split_radio.setChecked(True)
+
+        if repeat_count > 1:
+            self.grader_split_widget.repeat_yes_radio.setChecked(True)
+            self.grader_split_widget.repeat_count_spin.setValue(repeat_count)
+        else:
+            self.grader_split_widget.repeat_no_radio.setChecked(True)
+
+        # Load questions
+        self.questions = metadata.get("questions", [])
+        # Clear previous question list
+        while self.question_list_layout.count():
+            item = self.question_list_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        # Display detected questions
+        for q in self.questions:
+            label = QLabel(
+                f"Q{q['question_id']}: {q['question_text']} "
+                f"({q['question_type']})"
+            )
+            label.setWordWrap(True)
+            self.question_list_layout.addWidget(label)
+
+        self.question_summary_label.setText(
+            f"Detected {len(self.questions)} grading questions"
+        )
+
+        # Update grading summary
+        self.update_grading_summary()
+
+    def update_source_study_path(self):
+        """
+        Update the source study path if the study name input changes.
+        Should be called whenever self.study_name_input changes.
+        """
+        study_name = self.study_name_input.text().strip()
+        if not study_name:
+            return  # don't update if empty
+
+        # Base admin studies folder
+        admin_root = get_admin_studies_dir() 
+
+        # Update source path
+        self.source_study_path = admin_root / study_name
+
 
 class GraderInputWidget(QWidget):
     graders_changed = pyqtSignal()
