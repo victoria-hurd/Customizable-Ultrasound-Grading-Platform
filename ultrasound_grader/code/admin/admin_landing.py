@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 )
 from code.utils.app_paths import get_admin_studies_dir
 from code.admin.create_study_tab import CreateStudyTab
+from code.admin.results_review import ReviewResultsWindow
 
 class AdminLanding(QWidget):
     def __init__(self):
@@ -24,12 +25,15 @@ class AdminLanding(QWidget):
 
         self.create_btn = QPushButton("Create New Study")
         self.edit_btn = QPushButton("Edit Selected Study")
+        self.results_btn = QPushButton("Review Results for Selected Study")
 
         self.create_btn.clicked.connect(self.create_new)
         self.edit_btn.clicked.connect(self.edit_selected)
+        self.results_btn.clicked.connect(self.review_results)
 
         btn_layout.addWidget(self.create_btn)
         btn_layout.addWidget(self.edit_btn)
+        btn_layout.addWidget(self.results_btn)
 
         layout.addLayout(btn_layout)
 
@@ -57,5 +61,22 @@ class AdminLanding(QWidget):
         self.builder = CreateStudyTab(mode="edit", study_name=study_name, source_study_path=study_path)
         self.builder.show()
         self.hide()
+
+    def review_results(self):
+        selected = self.study_list.currentItem()
+        if not selected:
+            QMessageBox.warning(self, "No Selection", "Please select a study.")
+            return
+
+        study_name = selected.text()
+        study_path = os.path.join(self.admin_studies_dir, study_name)
+
+        results_dir = os.path.join(study_path, "Results")
+        os.makedirs(results_dir, exist_ok=True)
+
+        self.review_window = ReviewResultsWindow(study_path, parent_window=self)
+        self.review_window.show()
+        self.hide()
+
 
 
