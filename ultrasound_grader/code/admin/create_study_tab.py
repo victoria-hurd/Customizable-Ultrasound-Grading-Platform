@@ -27,6 +27,7 @@ class CreateStudyTab(QWidget):
         source_study_path=None
     ):
         super().__init__()
+        self.showMaximized()
         self.parent_window = parent_window
         self.mode = mode
         self.study_name = study_name
