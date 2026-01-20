@@ -12,6 +12,7 @@ from code.utils.schema import load_question_schema
 class GradingSessionTab(QWidget):
     def __init__(self,loaded_metadata,current_study_path,grader_name):
         super().__init__()
+        self.showMaximized()
         self.study_name = loaded_metadata['study_name']
         self.study_folder = current_study_path
         self.grader_name = grader_name
