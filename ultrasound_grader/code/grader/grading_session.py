@@ -4,18 +4,22 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QScrollArea, QProgressBar, QRadioButton,
                              QButtonGroup, QSlider, QMessageBox, QFileDialog)
 from PyQt6.QtCore import Qt
-from grader.video_player import VideoPlayer
-from data.schema import load_question_schema
+from code.grader.video_player import VideoPlayer
+from code.utils.schema import load_question_schema
+#from code.grader.grader_landing import GraderLanding
 
 
 class GradingSessionTab(QWidget):
-    def __init__(self):
+    def __init__(self,loaded_metadata,current_study_path,grader_name):
         super().__init__()
-        self.study_folder = None
-        self.grader_name = None
-        self.grader_df = None
-        self.questions = []
+        self.study_name = loaded_metadata['study_name']
+        self.study_folder = current_study_path
+        self.grader_name = grader_name
+        self.questions = loaded_metadata['questions']
         self.current_index = 0
+        output_dir = os.path.join(self.study_folder, "Output Grade Data")
+        self.grade_data_path = os.path.join(output_dir, f"{self.grader_name}_{self.study_name}_grade_data.csv")
+        self.grade_df = pd.read_csv(self.grade_data_path)
         self.answers = {}
 
         self._build_ui()
@@ -27,20 +31,25 @@ class GradingSessionTab(QWidget):
         # ---------------- Welcome Section ----------------
         self.welcome_widget = QWidget()
         welcome_layout = QVBoxLayout(self.welcome_widget)
-
-        # Folder selection
-        folder_layout = QHBoxLayout()
-        self.folder_label = QLabel("No study folder selected")
-        folder_btn = QPushButton("Select Study Folder")
-        folder_btn.clicked.connect(self.select_study_folder)
-        folder_layout.addWidget(folder_btn)
-        folder_layout.addWidget(self.folder_label)
-        welcome_layout.addLayout(folder_layout)
-
-        # Grader info
-        self.grader_info_label = QLabel("")
-        self.grader_info_label.setWordWrap(True)
-        welcome_layout.addWidget(self.grader_info_label)
+        # Count total and completed reviews
+        total_reviews = len(self.grade_df)
+        # generate question column names
+        self.q_cols = []
+        for q in self.questions:
+            # Question label
+            self.q_cols.append(f"{q['question_text']}")
+        completed_reviews = self.grade_df.dropna(subset=self.q_cols).shape[0]
+        self.study_info_label = QLabel()
+        self.study_info_label.setText(
+            f"Study Name: {self.study_name}\n"
+            f"Grader: {self.grader_name}\n"
+            f"Total Requested Reviews: {total_reviews}\n"
+            f"Completed Reviews: {completed_reviews}\n"
+            f"Questions per Review: {len(self.questions)}\n"
+            f"Study Location: {self.study_folder}"
+        )
+        self.study_info_label.setWordWrap(True)
+        welcome_layout.addWidget(self.study_info_label)
 
         # Instructions placeholder
         self.instructions_label = QLabel("Instructions placeholder: fill in later.")
@@ -49,7 +58,7 @@ class GradingSessionTab(QWidget):
 
         # Start grading button
         self.start_btn = QPushButton("Start Grading")
-        self.start_btn.setEnabled(False)
+        self.start_btn.setEnabled(True)
         self.start_btn.clicked.connect(self.show_grading_ui)
         welcome_layout.addWidget(self.start_btn)
 
@@ -124,83 +133,17 @@ class GradingSessionTab(QWidget):
         self.grading_widget.setVisible(False)
         self.layout_main.addWidget(self.grading_widget)
 
-    # ---------------- Welcome Functions ----------------
-    def select_study_folder(self):
-
-        folder = QFileDialog.getExistingDirectory(self, "Select Study Folder")
-        if not folder:
-            return
-
-        self.study_folder = folder
-        self.folder_label.setText(folder)
-
-        # Load demoGradeSheet.xlsx from folder
-        questions_path = os.path.join(folder, "demoGradeSheet.xlsx")
-        try:
-            self.questions = load_question_schema(questions_path)
-        except Exception as e:
-            QMessageBox.critical(self, "Question Load Error", str(e))
-            return
-
-        # Load grader CSV
-        csv_files = [f for f in os.listdir(folder) if f.endswith("_questions.csv")]
-        if not csv_files:
-            QMessageBox.warning(self, "No CSV Found", "No grader CSV found in this folder.")
-            return
-
-        csv_path = os.path.join(folder, csv_files[0])
-        try:
-            self.grader_df = pd.read_csv(csv_path)
-        except Exception as e:
-            QMessageBox.critical(self, "CSV Load Error", str(e))
-            return
-
-        # Determine grader name
-        self.grader_name = os.path.splitext(csv_files[0])[0].replace("_questions", "")
-
-        # Map schema questions to CSV columns using question_id as "Q{ID}"
-        csv_cols = self.grader_df.columns.tolist()
-        question_cols = []
-        for q in self.questions:
-            col_name = f"Q{q['question_id']}"
-            if col_name in csv_cols:
-                question_cols.append(col_name)
-            else:
-                print(f"Warning: Column '{col_name}' not found in CSV")
-
-        if not question_cols:
-            QMessageBox.warning(self, "No Question Columns", "Could not find any matching question columns in CSV.")
-            return
-
-        # Count empty rows and remaining reviews
-        empty_rows = self.grader_df[question_cols].isna().all(axis=1).sum()
-        remaining = self.grader_df[question_cols].isna().any(axis=1).sum()
-
-        if empty_rows == len(self.grader_df):
-            progress_text = "You haven't started grading yet."
-        else:
-            progress_text = f"You've already begun grading. You have {remaining} reviews remaining."
-
-        # Update label
-        self.grader_info_label.setText(
-            f"Grader: {self.grader_name}\nTotal reviews assigned: {len(self.grader_df)}\n{progress_text}"
-        )
-
-        # Enable start button
-        self.start_btn.setEnabled(True)
-        self.question_cols = question_cols
 
     # ---------------- Grading Functions ----------------
     def show_grading_ui(self):
         self.welcome_widget.setVisible(False)
         self.grading_widget.setVisible(True)
-        self.current_index = self.grader_df[self.question_cols].isna().any(axis=1).idxmax()
-        self.progress_bar.setMaximum(len(self.grader_df))
+        # generate question column names
+        self.current_index = self.grade_df[self.q_cols].isna().any(axis=1).idxmax()
+        self.progress_bar.setMaximum(len(self.grade_df))
         self.load_current_video()
 
     def load_current_video(self):
-        import os
-        from PyQt6.QtWidgets import QMessageBox
 
         # Clear previous questions
         while self.question_layout.count():
@@ -208,7 +151,7 @@ class GradingSessionTab(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-        row = self.grader_df.iloc[self.current_index]
+        row = self.grade_df.iloc[self.current_index]
         video_path = os.path.join(self.study_folder, "Raw Data", row["deidentified_filename"])
         if not os.path.exists(video_path):
             QMessageBox.warning(self, "Video Missing", f"Video not found: {video_path}")
@@ -250,35 +193,36 @@ class GradingSessionTab(QWidget):
 
     def save_and_next(self):
         row_index = self.current_index
-        row_answers = {}
-        for q_text, btn_group in self.radio_groups:
+    # Collect answers
+        for q_id, btn_group in self.radio_groups:
             if btn_group is None:
-                continue  # Skip Annotation for now
+                continue  # Annotation later
+
             selected = btn_group.checkedButton()
-            if selected:
-                row_answers[q_text] = selected.text()
-            else:
-                QMessageBox.warning(self, "Answer Required", f"You must answer {q_text} before moving on.")
+            if not selected:
+                QMessageBox.warning(
+                    self,
+                    "Answer Required",
+                    f"You must answer {q_id} before continuing."
+                )
                 return
 
-        # Save answers into the grader_df
-        for q_text, answer in row_answers.items():
-            if q_text in self.grader_df.columns:
-                self.grader_df.at[row_index, q_text] = answer
-            else:
-                # If the column doesn't exist, add it
-                self.grader_df[q_text] = ""
-                self.grader_df.at[row_index, q_text] = answer
+            # Write directly into the existing column
+            self.grade_df.at[row_index, q_id] = str(selected.text())
 
-        self.answers[row_index] = row_answers  # optional, still keep for tracking
+        # Persist immediately
+        self.grade_df.to_csv(self.grade_data_path, index=False)
+
+        # Advance
         self.current_index += 1
         self.progress_bar.setValue(self.current_index)
 
-        if self.current_index >= len(self.grader_df):
-            # Save the entire DataFrame back to CSV
-            save_path = os.path.join(self.study_folder, f"{self.grader_name}_questions.csv")
-            self.grader_df.to_csv(save_path, index=False)
-            QMessageBox.information(self, "Grading Complete", "All reviews completed! Answers saved.")
+        if self.current_index >= len(self.grade_df):
+            QMessageBox.information(
+                self,
+                "Grading Complete",
+                "All reviews completed! Answers saved."
+            )
             self.exit_grading()
         else:
             self.load_current_video()
@@ -301,7 +245,4 @@ class GradingSessionTab(QWidget):
             self.exit_grading()
 
     def exit_grading(self):
-        save_path = os.path.join(self.study_folder, f"{self.grader_name}_answers.csv")
-        df_answers = pd.DataFrame.from_dict(self.answers, orient="index")
-        df_answers.to_csv(save_path, index=False)
         self.parentWidget().close()
