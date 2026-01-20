@@ -12,9 +12,6 @@ import shutil
 import random
 import pandas as pd
 from code.utils.schema import load_question_schema
-from code.admin.study_builder import (detect_media_files, 
-                                 assign_files_to_graders, 
-                                 create_master_study_csv)
 from code.utils.app_paths import get_admin_studies_dir
 
 # Create the study building tab for admin users
