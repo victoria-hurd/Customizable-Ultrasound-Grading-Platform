@@ -21,13 +21,13 @@ from code.utils.app_paths import get_admin_studies_dir
 class CreateStudyTab(QWidget):
     def __init__(
         self,
-        parent=None,
+        parent_window=None,
         mode="new",                    # "new" | "edit" 
         study_name=None,
         source_study_path=None
     ):
-        super().__init__(parent)
-
+        super().__init__()
+        self.parent_window = parent_window
         self.mode = mode
         self.study_name = study_name
         self.source_study_path = source_study_path
@@ -124,12 +124,14 @@ class CreateStudyTab(QWidget):
         scroll_area.setWidget(scroll_container)
         outer_layout.addWidget(scroll_area)
 
+        # ---------------- Post Review Buttons ----------------
         action_bar = QHBoxLayout()
         action_bar.addStretch()
-
+        back_btn = QPushButton("Back to Admin Landing")
+        back_btn.clicked.connect(self.go_back_to_admin)
         create_btn = QPushButton("Create Study")
         create_btn.clicked.connect(self.create_study_clicked)
-
+        action_bar.addWidget(back_btn)
         action_bar.addWidget(create_btn)
         outer_layout.addLayout(action_bar)
 
@@ -600,6 +602,11 @@ class CreateStudyTab(QWidget):
 
         # Update source path
         self.source_study_path = admin_root / study_name
+
+    def go_back_to_admin(self):
+        if self.parent_window:
+            self.parent_window.show()  # show the admin landing page
+        self.close()
 
 
 class GraderInputWidget(QWidget):

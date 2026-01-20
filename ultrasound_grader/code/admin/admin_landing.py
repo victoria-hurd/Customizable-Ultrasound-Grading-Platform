@@ -47,7 +47,7 @@ class AdminLanding(QWidget):
 
     def create_new(self):
         # No study name passed; CreateStudyTab will operate in 'new' mode
-        self.builder = CreateStudyTab(mode="new")
+        self.builder = CreateStudyTab(mode="new", parent_window=self)
         self.builder.show()
         self.hide()
 
@@ -58,7 +58,7 @@ class AdminLanding(QWidget):
             return
         study_name = selected.text()
         study_path = os.path.join(self.admin_studies_dir, study_name)
-        self.builder = CreateStudyTab(mode="edit", study_name=study_name, source_study_path=study_path)
+        self.builder = CreateStudyTab(mode="edit", study_name=study_name, source_study_path=study_path, parent_window=self)
         self.builder.show()
         self.hide()
 
