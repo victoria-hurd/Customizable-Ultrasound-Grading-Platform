@@ -107,7 +107,7 @@ class GradingSessionTab(QWidget):
 
         # Video player
         self.video_player = VideoPlayer()
-        video_container.addWidget(self.video_player)
+        video_container.addWidget(self.video_player,stretch=3)
 
         # Video controls
         controls_layout = QHBoxLayout()
@@ -120,6 +120,7 @@ class GradingSessionTab(QWidget):
         self.play_btn.clicked.connect(self.video_player.play)
         self.pause_btn.clicked.connect(self.video_player.pause)
 
+        controls_layout.addStretch()
         controls_layout.addWidget(self.play_btn)
         controls_layout.addWidget(self.pause_btn)
         controls_layout.addStretch()
@@ -136,8 +137,12 @@ class GradingSessionTab(QWidget):
         self.scrub_slider.valueChanged.connect(self.scrub_video)
 
         # Progress bar at the bottom of video container
+        progress_layout = QHBoxLayout()
         self.progress_bar = QProgressBar()
-        video_container.addWidget(self.progress_bar)
+        self.progress_label = QLabel(f"Video {self.current_index+1} of {len(self.grade_df)}")
+        progress_layout.addWidget(self.progress_bar)
+        progress_layout.addWidget(self.progress_label)
+        video_container.addLayout(progress_layout)
 
         grading_layout.addLayout(video_container, stretch=3)  # Take 3/4 of horizontal space
 
@@ -256,6 +261,7 @@ class GradingSessionTab(QWidget):
 
 
         self.progress_bar.setValue(self.current_index)
+        self.progress_label.setText(f"Video {self.current_index+1} of {len(self.grade_df)}")
 
     def save_and_next(self):
         row_index = self.current_index
@@ -282,6 +288,7 @@ class GradingSessionTab(QWidget):
         # Advance
         self.current_index += 1
         self.progress_bar.setValue(self.current_index)
+        self.progress_label.setText(f"Video {self.current_index+1} of {len(self.grade_df)}")
 
         if self.current_index >= len(self.grade_df):
             # If grading is complete, show post-grading UI
