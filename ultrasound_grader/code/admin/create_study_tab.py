@@ -505,7 +505,7 @@ class CreateStudyTab(QWidget):
         # Create info string
         grader_string = ", ".join(str(x) for x in graders)
         zip_string = "\n".join(str(x) for x in zip_location)
-        summary_str = f"Study Name: {study_name}\nGrader Releases Created: {grader_string}\nReleases have been sent to: {zip_string}\n"
+        summary_str = f"Study Name: {study_name}\nGrader Releases Created: {grader_string}\nReleases have been sent to: \n{zip_string}\n"
         # Success string
         success_str = "Releases created successfully!\n\n"
 
