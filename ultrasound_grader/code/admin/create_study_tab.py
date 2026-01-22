@@ -686,15 +686,12 @@ class GraderSplitWidget(QWidget):
         left_layout = QVBoxLayout()
         self.all_grade_all_radio = QRadioButton("All graders grade all images")
         self.split_radio = QRadioButton("Split images among graders")
-        self.split_evenly_radio = QRadioButton("Split evenly")
         # Create button group to manage exclusivity
         self.assignment_group = QButtonGroup(self)
         self.assignment_group.addButton(self.all_grade_all_radio)
         self.assignment_group.addButton(self.split_radio)
-        self.assignment_group.addButton(self.split_evenly_radio)
         # set defaults
         self.all_grade_all_radio.setChecked(True)
-        self.split_evenly_radio.setEnabled(False)
         # Connect toggles and emit signals when changed
         # self.split_radio.toggled.connect(self.split_evenly_radio.setEnabled)
         # self.all_grade_all_radio.toggled.connect(self.assignment_changed.emit)
@@ -702,7 +699,6 @@ class GraderSplitWidget(QWidget):
         # Add to left side of HBox
         left_layout.addWidget(self.all_grade_all_radio)
         left_layout.addWidget(self.split_radio)
-        left_layout.addWidget(self.split_evenly_radio)
 
         # RIGHT SIDE: Repeat options
         # Set up the right side, with repeat options for intra-rater reliability
@@ -740,7 +736,6 @@ class GraderSplitWidget(QWidget):
         # COMBINE
         # Wiring
         self.split_radio.toggled.connect(lambda checked: (
-            self.split_evenly_radio.setEnabled(checked),
             self.assignment_changed.emit()
         ))
         self.all_grade_all_radio.toggled.connect(self.assignment_changed.emit)
