@@ -5,7 +5,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QButtonGroup, QSlider, QMessageBox, QApplication)
 from PyQt6.QtCore import Qt
 from code.grader.video_player import VideoPlayer
-from code.utils.app_paths import get_project_root
+from pathlib import Path
+from code.utils.app_paths import get_project_root,move_without_overwrite
 
 class GradingSessionTab(QWidget):
     def __init__(self,
@@ -51,7 +52,7 @@ class GradingSessionTab(QWidget):
             "<b>Grading Session Summary</b>\n"
             f"<b>Study Name:</b> {self.study_name}<br>"
             f"<b>Grader Name:</b> {self.grader_name}<br>"
-            f"<b>Total Requested Reviews:</b> {total_reviews}<br>"
+            f"<b>Total Number of Reviews Assigned to You:</b> {total_reviews}<br>"
             f"<b>Reviews Completed So Far:</b> {completed_reviews}<br>"
             f"<b>Questions per Review:</b> {len(self.questions)}"
             )
@@ -95,9 +96,12 @@ class GradingSessionTab(QWidget):
 
         # Exit button in top-left
         exit_layout = QHBoxLayout()
-        self.exit_btn = QPushButton("Exit Grading")
-        self.exit_btn.clicked.connect(self.confirm_exit)
-        exit_layout.addWidget(self.exit_btn)
+        back_btn_2 = QPushButton("Back to Grader Landing")
+        back_btn_2.clicked.connect(self.go_back_to_grader_landing)
+        exit_btn = QPushButton("Exit Grading")
+        exit_btn.clicked.connect(self.confirm_exit)
+        exit_layout.addWidget(back_btn_2)
+        exit_layout.addWidget(exit_btn)
         exit_layout.addStretch()
         video_container.addLayout(exit_layout)
 
@@ -154,6 +158,45 @@ class GradingSessionTab(QWidget):
 
         self.grading_widget.setVisible(False)
         self.layout_main.addWidget(self.grading_widget)
+
+        # ---------------- Post-Grading Section ----------------
+        self.post_grading_widget = QWidget()
+        post_grading_layout = QVBoxLayout(self.post_grading_widget)
+
+        # Post-Grading Panel with Instructions and Exit
+        end_session_label = QLabel("<b>Grading Session Complete</b>\n\n")
+        root = get_project_root()
+        end_session_instructions_location = os.path.join(root,"app_resources", "session_end_instructions.txt")
+        with open(end_session_instructions_location) as f:
+            end_session_instructions = f.read()
+        end_session_instructions_label = QLabel(end_session_instructions)
+        end_session_instructions_label.setWordWrap(True)
+        post_grading_layout.addWidget(end_session_label)
+        post_grading_layout.addWidget(end_session_instructions_label)
+
+        # Download data button
+        download_box = QHBoxLayout()
+        download_btn = QPushButton("Download Graded Data CSV")
+        download_btn.clicked.connect(self.download_graded_data)
+        download_box.addStretch()
+        download_box.addWidget(download_btn)
+        download_box.addStretch()
+        post_grading_layout.addLayout(download_box)
+        post_grading_layout.addSpacing(20)
+
+        # Exit action buttons
+        action_bar_post = QHBoxLayout()
+        action_bar_post.addStretch()
+        back_btn_3 = QPushButton("Back to Grader Landing")
+        back_btn_3.clicked.connect(self.go_back_to_grader_landing)
+        exit_btn_2 = QPushButton("Exit Application")
+        exit_btn_2.clicked.connect(self.confirm_exit)
+        action_bar_post.addWidget(back_btn_3)
+        action_bar_post.addWidget(exit_btn_2)
+        post_grading_layout.addLayout(action_bar_post)
+
+        self.post_grading_widget.setVisible(False)
+        self.layout_main.addWidget(self.post_grading_widget)
 
 
     # ---------------- Grading Functions ----------------
@@ -241,13 +284,10 @@ class GradingSessionTab(QWidget):
         self.progress_bar.setValue(self.current_index)
 
         if self.current_index >= len(self.grade_df):
-            QMessageBox.information(
-                self,
-                "Grading Complete",
-                "All reviews completed! Answers saved."
-            )
-            self.exit_grading()
+            # If grading is complete, show post-grading UI
+            self.show_post_ui()
         else:
+            # Otherwise, load next video
             self.load_current_video()
 
     # ---------------- Video Scrubbing ----------------
@@ -257,6 +297,15 @@ class GradingSessionTab(QWidget):
             self.video_player.seek(pos_percent)
 
     # ---------------- Exit Grading ----------------
+    def show_post_ui(self):
+        self.showMaximized()
+        self.grading_widget.setVisible(False)
+        self.post_grading_widget.setVisible(True)
+
+    def download_graded_data(self):
+        downloads_folder = str(Path.home() / "Downloads")
+        move_without_overwrite(self.grade_data_path, downloads_folder, mode='copy')
+
     def confirm_exit(self):
         reply = QMessageBox.question(
             self,
