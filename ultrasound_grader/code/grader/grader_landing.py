@@ -159,6 +159,7 @@ class GraderLanding(QWidget):
                                          self.grader_name,
                                          parent_window=self)
         self.builder.show()
+        self.study_info_label.setText("")
         self.hide()
 
     # ---------------- Download Grades ----------------
