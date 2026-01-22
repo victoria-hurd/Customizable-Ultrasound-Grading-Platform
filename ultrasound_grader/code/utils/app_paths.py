@@ -29,9 +29,9 @@ def move_without_overwrite(source_path, destination_dir, mode='move'):
     if not destination_path.exists():
         # If the file does not exist, just move it/copy it, depending on mode
         if mode == 'copy':
-            shutil.copy(str(source_path), str(new_destination_path))
+            shutil.copy(str(source_path), str(destination_path))
         else:
-            shutil.move(str(source_path), str(new_destination_path))
+            shutil.move(str(source_path), str(destination_path))
         return destination_path
 
     else:
