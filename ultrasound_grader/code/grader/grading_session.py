@@ -312,6 +312,7 @@ class GradingSessionTab(QWidget):
     def download_graded_data(self):
         downloads_folder = str(Path.home() / "Downloads")
         move_without_overwrite(self.grade_data_path, downloads_folder, mode='copy')
+        QMessageBox.information(self, "Download Complete", f"Grades copied to {downloads_folder}")
 
     def confirm_exit(self):
         reply = QMessageBox.question(
