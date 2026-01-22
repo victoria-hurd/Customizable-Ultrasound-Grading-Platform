@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
     QListWidget, QMessageBox, QFileDialog
 )
 from code.utils.app_paths import get_grader_studies_dir
-from code.grader.grader_window import GraderStartWindow
 from code.grader.grading_session import GradingSessionTab
 
 class GraderLanding(QWidget):
