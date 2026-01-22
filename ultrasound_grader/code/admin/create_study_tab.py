@@ -522,12 +522,18 @@ class CreateStudyTab(QWidget):
         success_layout = QVBoxLayout(success_frame)
         success_layout.addWidget(success_widget)
 
-        # Button to close application
-        self.exit_button = QPushButton("Exit Application")
-        self.exit_button.clicked.connect(QApplication.instance().quit)
+        # Buttons to close application or go back to admin landing
+        success_action_bar = QHBoxLayout()
+        success_action_bar.addStretch()
+        post_grade_back_btn = QPushButton("Back to Admin Landing")
+        post_grade_back_btn.clicked.connect(self.go_back_to_admin)
+        exit_button = QPushButton("Exit Application")
+        exit_button.clicked.connect(QApplication.instance().quit)
+        success_action_bar.addWidget(post_grade_back_btn)
+        success_action_bar.addWidget(exit_button)
 
         success_layout.addSpacing(20)
-        success_layout.addWidget(self.exit_button)
+        success_layout.addLayout(success_action_bar)
         success_layout.addStretch()
 
         # Add all to main layout
