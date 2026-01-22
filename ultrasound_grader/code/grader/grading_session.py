@@ -178,7 +178,6 @@ class GradingSessionTab(QWidget):
         download_box = QHBoxLayout()
         download_btn = QPushButton("Download Graded Data CSV")
         download_btn.clicked.connect(self.download_graded_data)
-        download_box.addStretch()
         download_box.addWidget(download_btn)
         download_box.addStretch()
         post_grading_layout.addLayout(download_box)
@@ -194,6 +193,7 @@ class GradingSessionTab(QWidget):
         action_bar_post.addWidget(back_btn_3)
         action_bar_post.addWidget(exit_btn_2)
         post_grading_layout.addLayout(action_bar_post)
+        post_grading_layout.addStretch()
 
         self.post_grading_widget.setVisible(False)
         self.layout_main.addWidget(self.post_grading_widget)
