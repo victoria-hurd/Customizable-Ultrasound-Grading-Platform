@@ -25,12 +25,16 @@ class VideoPlayer(QWidget):
         # Connect media_player signals
         self.media_player.positionChanged.connect(self.update_slider)
         self.media_player.durationChanged.connect(self.update_slider_range)
+        self.media_player.mediaStatusChanged.connect(self._handle_media_status)
 
     def set_slider(self, slider):
-        """Assign the slider to control this video"""
         self.slider = slider
         self.slider.setValue(0)
-        self.slider.sliderReleased.connect(self.slider_released)
+        self.slider.sliderMoved.connect(self._slider_moved)
+
+    def update_slider_range(self, duration):
+        if self.slider:
+            self.slider.setRange(0, duration)
 
     def load_video(self, path):
         if not os.path.exists(path):
@@ -39,6 +43,9 @@ class VideoPlayer(QWidget):
         self.media_player.stop()
 
     def play(self):
+        # If we're at (or extremely close to) the end, restart
+        if self.media_player.position() >= self.media_player.duration() - 5:
+            self.media_player.setPosition(0)
         self.media_player.play()
 
     def pause(self):
@@ -47,29 +54,19 @@ class VideoPlayer(QWidget):
     def stop(self):
         self.media_player.stop()
 
-    def seek(self, percent):
-        """Seek to a percentage of the video (0.0 - 1.0)"""
-        duration = self.media_player.duration()
-        if duration > 0:
-            self.media_player.setPosition(int(duration * percent))
-
     # ---------------- Slot for slider ----------------
     def update_slider(self, position):
-        """Update slider position as video plays"""
-        if self.slider and self.media_player.duration() > 0:
-            value = int((position / self.media_player.duration()) * 100)
-            self.slider.blockSignals(True)  # prevent recursion
-            self.slider.setValue(value)
-            self.slider.blockSignals(False)
+        if self.slider and not self.slider.isSliderDown():
+            self.slider.setValue(position)
 
-    def update_slider_range(self, duration):
-        """Ensure slider is reset when video loads"""
-        if self.slider:
-            self.slider.setMinimum(0)
-            self.slider.setMaximum(100)
+    def _slider_moved(self, position):
+        self.media_player.setPosition(position)
 
-    def slider_released(self):
-        """When user drags slider, update video position"""
-        if self.slider:
-            percent = self.slider.value() / 100
-            self.seek(percent)
+    def _handle_media_status(self, status):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.media_player.pause()
+            self.media_player.setPosition(self.media_player.duration())
+
+    # ---------------- Frame grab for annotation ----------------
+    def grab_frame(self):
+        return self.video_widget.grab()

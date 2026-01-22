@@ -130,11 +130,9 @@ class GradingSessionTab(QWidget):
         # Scrubbing slider
         self.scrub_slider = QSlider(Qt.Orientation.Horizontal)
         self.scrub_slider.setMinimum(0)
-        self.scrub_slider.setMaximum(100)  # We'll update dynamically based on video length
+        #self.scrub_slider.setMaximum(100)  # We'll update dynamically based on video length
         video_container.addWidget(self.scrub_slider)
         self.video_player.set_slider(self.scrub_slider)
-        #self.scrub_slider.sliderMoved.connect(self.scrub_video)
-        self.scrub_slider.valueChanged.connect(self.scrub_video)
 
         # Progress bar at the bottom of video container
         progress_layout = QHBoxLayout()
@@ -296,12 +294,6 @@ class GradingSessionTab(QWidget):
         else:
             # Otherwise, load next video
             self.load_current_video()
-
-    # ---------------- Video Scrubbing ----------------
-    def scrub_video(self):
-        if hasattr(self.video_player, 'seek'):
-            pos_percent = self.scrub_slider.value() / 100
-            self.video_player.seek(pos_percent)
 
     # ---------------- Exit Grading ----------------
     def show_post_ui(self):
