@@ -7,12 +7,13 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QButtonGroup, QProgressBar, QFrame,
                              QApplication)
 from PyQt6.QtCore import pyqtSignal, Qt 
-from zipfile import Path, ZipFile
+from zipfile import ZipFile
+from pathlib import Path
 import shutil
 import random
 import pandas as pd
 from code.utils.schema import load_question_schema
-from code.utils.app_paths import get_admin_studies_dir
+from code.utils.app_paths import get_admin_studies_dir, move_without_overwrite
 
 # Create the study building tab for admin users
 class CreateStudyTab(QWidget):
@@ -435,6 +436,7 @@ class CreateStudyTab(QWidget):
         progress = QProgressBar()
         progress.setMaximum(len(graders))
         self.layout().addWidget(progress)
+        dest_paths_list = []
 
         for i, grader in enumerate(graders, start=1):
             grader_folder = os.path.join(releases_folder, f"{grader}_{study_name}")
@@ -478,14 +480,15 @@ class CreateStudyTab(QWidget):
                         zipf.write(abs_path, arcname)
             # Move .zips to downloads folder
             downloads_folder = os.path.join(Path.home(),"Downloads")
-            shutil.move(zip_path, downloads_folder)
+            dest_path = move_without_overwrite(zip_path, downloads_folder)
+            dest_paths_list.append(dest_path)
             # Update progress bar
             progress.setValue(i)
 
         # Show success panel 
-        self.show_release_success(study_name, downloads_folder, graders)
+        self.show_release_success(study_name, dest_paths_list, graders)
 
-    def show_release_success(self, study_name, downloads_folder, graders):
+    def show_release_success(self, study_name, zip_location, graders):
         # Hide all existing widgets in the tab (inputs, labels, etc.)
         central_layout = self.layout()
         for i in reversed(range(central_layout.count())):
@@ -501,7 +504,8 @@ class CreateStudyTab(QWidget):
 
         # Create info string
         grader_string = ", ".join(str(x) for x in graders)
-        summary_str = f"Study Name: {study_name}\nGrader Releases Created: {grader_string}\nReleases have been sent to: {downloads_folder}\n"
+        zip_string = "\n".join(str(x) for x in zip_location)
+        summary_str = f"Study Name: {study_name}\nGrader Releases Created: {grader_string}\nReleases have been sent to: {zip_string}\n"
         # Success string
         success_str = "Releases created successfully!\n\n"
 
