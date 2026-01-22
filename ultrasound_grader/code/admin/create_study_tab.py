@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QButtonGroup, QProgressBar, QFrame,
                              QApplication)
 from PyQt6.QtCore import pyqtSignal, Qt 
-from zipfile import ZipFile
+from zipfile import Path, ZipFile
 import shutil
 import random
 import pandas as pd
@@ -459,10 +459,7 @@ class CreateStudyTab(QWidget):
                 grader_folder,
                 f"{grader}_{study_name}_grade_request.csv"
             )
-            # # Add questions, make empty columns for answers
-            # for q in self.questions:
-            #     grader_df[f"Q{q['question_id']}"] = ""
-            
+
             grader_df.to_csv(grader_csv_path, index=False)
 
             # Copy over the metadata file
@@ -479,13 +476,16 @@ class CreateStudyTab(QWidget):
                         abs_path = os.path.join(root, file)
                         arcname = os.path.relpath(abs_path, start=releases_folder)
                         zipf.write(abs_path, arcname)
-
+            # Move .zips to downloads folder
+            downloads_folder = os.path.join(Path.home(),"Downloads")
+            shutil.move(zip_path, downloads_folder)
+            # Update progress bar
             progress.setValue(i)
 
         # Show success panel 
-        self.show_release_success(study_name, self.current_study_folder, graders)
+        self.show_release_success(study_name, downloads_folder, graders)
 
-    def show_release_success(self, study_name, study_folder, graders):
+    def show_release_success(self, study_name, downloads_folder, graders):
         # Hide all existing widgets in the tab (inputs, labels, etc.)
         central_layout = self.layout()
         for i in reversed(range(central_layout.count())):
@@ -501,7 +501,7 @@ class CreateStudyTab(QWidget):
 
         # Create info string
         grader_string = ", ".join(str(x) for x in graders)
-        summary_str = f"Study Name: {study_name}\nStudy Folder: {study_folder}\nGrader Releases Created: {grader_string}\n"
+        summary_str = f"Study Name: {study_name}\nGrader Releases Created: {grader_string}\nReleases have been sent to: {downloads_folder}\n"
         # Success string
         success_str = "Releases created successfully!\n\n"
 
