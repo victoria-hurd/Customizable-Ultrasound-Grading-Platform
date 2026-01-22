@@ -2,17 +2,20 @@ import os
 import pandas as pd
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QScrollArea, QProgressBar, QRadioButton,
-                             QButtonGroup, QSlider, QMessageBox, QFileDialog)
+                             QButtonGroup, QSlider, QMessageBox, QApplication)
 from PyQt6.QtCore import Qt
 from code.grader.video_player import VideoPlayer
-from code.utils.schema import load_question_schema
-#from code.grader.grader_landing import GraderLanding
-
+from code.utils.app_paths import get_project_root
 
 class GradingSessionTab(QWidget):
-    def __init__(self,loaded_metadata,current_study_path,grader_name):
+    def __init__(self,
+                 loaded_metadata,
+                 current_study_path,
+                 grader_name,
+                 parent_window=None):
         super().__init__()
         self.showMaximized()
+        self.parent_window = parent_window
         self.study_name = loaded_metadata['study_name']
         self.study_folder = current_study_path
         self.grader_name = grader_name
@@ -40,28 +43,46 @@ class GradingSessionTab(QWidget):
             # Question label
             self.q_cols.append(f"{q['question_text']}")
         completed_reviews = self.grade_df.dropna(subset=self.q_cols).shape[0]
-        self.study_info_label = QLabel()
-        self.study_info_label.setText(
-            f"Study Name: {self.study_name}\n"
-            f"Grader: {self.grader_name}\n"
-            f"Total Requested Reviews: {total_reviews}\n"
-            f"Completed Reviews: {completed_reviews}\n"
-            f"Questions per Review: {len(self.questions)}\n"
-            f"Study Location: {self.study_folder}"
-        )
-        self.study_info_label.setWordWrap(True)
-        welcome_layout.addWidget(self.study_info_label)
+        study_info_label = QLabel()
 
-        # Instructions placeholder
-        self.instructions_label = QLabel("Instructions placeholder: fill in later.")
-        self.instructions_label.setWordWrap(True)
-        welcome_layout.addWidget(self.instructions_label)
+        # Metadata display
+        study_info_label = QLabel()
+        text = (
+            "<b>Grading Session Summary</b>\n"
+            f"<b>Study Name:</b> {self.study_name}<br>"
+            f"<b>Grader Name:</b> {self.grader_name}<br>"
+            f"<b>Total Requested Reviews:</b> {total_reviews}<br>"
+            f"<b>Reviews Completed So Far:</b> {completed_reviews}<br>"
+            f"<b>Questions per Review:</b> {len(self.questions)}"
+            )
 
-        # Start grading button
-        self.start_btn = QPushButton("Start Grading")
-        self.start_btn.setEnabled(True)
-        self.start_btn.clicked.connect(self.show_grading_ui)
-        welcome_layout.addWidget(self.start_btn)
+        study_info_label.setText(text)
+        study_info_label.setWordWrap(True)
+        welcome_layout.addWidget(study_info_label)
+
+        # Grader Instructions display
+        grader_instruction_label = QLabel("<b>Grader Instructions:</b>\n\n")
+        root = get_project_root()
+        instructions_location = os.path.join(root,"app_resources", "grader_instructions.txt")
+        with open(instructions_location) as f:
+            instructions = f.read()
+        instructions_label = QLabel(instructions)
+        instructions_label.setWordWrap(True)
+        welcome_layout.addWidget(grader_instruction_label)
+        welcome_layout.addWidget(instructions_label)
+
+        # Action buttons
+        action_bar = QHBoxLayout()
+        action_bar.addStretch()
+        back_btn = QPushButton("Back to Grader Landing")
+        back_btn.clicked.connect(self.go_back_to_grader_landing)
+        start_btn = QPushButton("Start Grading")
+        start_btn.clicked.connect(self.show_grading_ui)
+        action_bar.addWidget(back_btn)
+        action_bar.addWidget(start_btn)
+        welcome_layout.addLayout(action_bar)
+
+        welcome_layout.addStretch()
 
         self.layout_main.addWidget(self.welcome_widget)
 
@@ -137,6 +158,7 @@ class GradingSessionTab(QWidget):
 
     # ---------------- Grading Functions ----------------
     def show_grading_ui(self):
+        self.showMaximized()
         self.welcome_widget.setVisible(False)
         self.grading_widget.setVisible(True)
         # generate question column names
@@ -246,4 +268,9 @@ class GradingSessionTab(QWidget):
             self.exit_grading()
 
     def exit_grading(self):
-        self.parentWidget().close()
+        QApplication.instance().quit()
+
+    def go_back_to_grader_landing(self):
+        if self.parent_window:
+            self.parent_window.show()  # show the grader landing page
+        self.close()
