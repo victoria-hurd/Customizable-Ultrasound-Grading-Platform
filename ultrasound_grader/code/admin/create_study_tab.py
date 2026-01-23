@@ -8,26 +8,25 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QApplication)
 from PyQt6.QtCore import pyqtSignal, Qt 
 from zipfile import ZipFile
+from pathlib import Path
 import shutil
 import random
 import pandas as pd
 from code.utils.schema import load_question_schema
-from code.admin.study_builder import (detect_media_files, 
-                                 assign_files_to_graders, 
-                                 create_master_study_csv)
-from code.utils.app_paths import get_admin_studies_dir
+from code.utils.app_paths import get_admin_studies_dir, move_without_overwrite
 
 # Create the study building tab for admin users
 class CreateStudyTab(QWidget):
     def __init__(
         self,
-        parent=None,
+        parent_window=None,
         mode="new",                    # "new" | "edit" 
         study_name=None,
         source_study_path=None
     ):
-        super().__init__(parent)
-
+        super().__init__()
+        self.showMaximized()
+        self.parent_window = parent_window
         self.mode = mode
         self.study_name = study_name
         self.source_study_path = source_study_path
@@ -124,12 +123,14 @@ class CreateStudyTab(QWidget):
         scroll_area.setWidget(scroll_container)
         outer_layout.addWidget(scroll_area)
 
+        # ---------------- Post Review Buttons ----------------
         action_bar = QHBoxLayout()
         action_bar.addStretch()
-
+        back_btn = QPushButton("Back to Admin Landing")
+        back_btn.clicked.connect(self.go_back_to_admin)
         create_btn = QPushButton("Create Study")
         create_btn.clicked.connect(self.create_study_clicked)
-
+        action_bar.addWidget(back_btn)
         action_bar.addWidget(create_btn)
         outer_layout.addLayout(action_bar)
 
@@ -435,6 +436,7 @@ class CreateStudyTab(QWidget):
         progress = QProgressBar()
         progress.setMaximum(len(graders))
         self.layout().addWidget(progress)
+        dest_paths_list = []
 
         for i, grader in enumerate(graders, start=1):
             grader_folder = os.path.join(releases_folder, f"{grader}_{study_name}")
@@ -459,10 +461,7 @@ class CreateStudyTab(QWidget):
                 grader_folder,
                 f"{grader}_{study_name}_grade_request.csv"
             )
-            # # Add questions, make empty columns for answers
-            # for q in self.questions:
-            #     grader_df[f"Q{q['question_id']}"] = ""
-            
+
             grader_df.to_csv(grader_csv_path, index=False)
 
             # Copy over the metadata file
@@ -479,13 +478,17 @@ class CreateStudyTab(QWidget):
                         abs_path = os.path.join(root, file)
                         arcname = os.path.relpath(abs_path, start=releases_folder)
                         zipf.write(abs_path, arcname)
-
+            # Move .zips to downloads folder
+            downloads_folder = os.path.join(Path.home(),"Downloads")
+            dest_path = move_without_overwrite(zip_path, downloads_folder)
+            dest_paths_list.append(dest_path)
+            # Update progress bar
             progress.setValue(i)
 
         # Show success panel 
-        self.show_release_success(study_name, self.current_study_folder, graders)
+        self.show_release_success(study_name, dest_paths_list, graders)
 
-    def show_release_success(self, study_name, study_folder, graders):
+    def show_release_success(self, study_name, zip_location, graders):
         # Hide all existing widgets in the tab (inputs, labels, etc.)
         central_layout = self.layout()
         for i in reversed(range(central_layout.count())):
@@ -501,7 +504,8 @@ class CreateStudyTab(QWidget):
 
         # Create info string
         grader_string = ", ".join(str(x) for x in graders)
-        summary_str = f"Study Name: {study_name}\nStudy Folder: {study_folder}\nGrader Releases Created: {grader_string}\n"
+        zip_string = "\n".join(str(x) for x in zip_location)
+        summary_str = f"Study Name: {study_name}\nGrader Releases Created: {grader_string}\nReleases have been sent to: \n{zip_string}\n"
         # Success string
         success_str = "Releases created successfully!\n\n"
 
@@ -518,12 +522,18 @@ class CreateStudyTab(QWidget):
         success_layout = QVBoxLayout(success_frame)
         success_layout.addWidget(success_widget)
 
-        # Button to close application
-        self.exit_button = QPushButton("Exit Application")
-        self.exit_button.clicked.connect(QApplication.instance().quit)
+        # Buttons to close application or go back to admin landing
+        success_action_bar = QHBoxLayout()
+        success_action_bar.addStretch()
+        post_grade_back_btn = QPushButton("Back to Admin Landing")
+        post_grade_back_btn.clicked.connect(self.go_back_to_admin)
+        exit_button = QPushButton("Exit Application")
+        exit_button.clicked.connect(QApplication.instance().quit)
+        success_action_bar.addWidget(post_grade_back_btn)
+        success_action_bar.addWidget(exit_button)
 
         success_layout.addSpacing(20)
-        success_layout.addWidget(self.exit_button)
+        success_layout.addLayout(success_action_bar)
         success_layout.addStretch()
 
         # Add all to main layout
@@ -600,6 +610,11 @@ class CreateStudyTab(QWidget):
 
         # Update source path
         self.source_study_path = admin_root / study_name
+
+    def go_back_to_admin(self):
+        if self.parent_window:
+            self.parent_window.show()  # show the admin landing page
+        self.close()
 
 
 class GraderInputWidget(QWidget):
@@ -681,15 +696,12 @@ class GraderSplitWidget(QWidget):
         left_layout = QVBoxLayout()
         self.all_grade_all_radio = QRadioButton("All graders grade all images")
         self.split_radio = QRadioButton("Split images among graders")
-        self.split_evenly_radio = QRadioButton("Split evenly")
         # Create button group to manage exclusivity
         self.assignment_group = QButtonGroup(self)
         self.assignment_group.addButton(self.all_grade_all_radio)
         self.assignment_group.addButton(self.split_radio)
-        self.assignment_group.addButton(self.split_evenly_radio)
         # set defaults
         self.all_grade_all_radio.setChecked(True)
-        self.split_evenly_radio.setEnabled(False)
         # Connect toggles and emit signals when changed
         # self.split_radio.toggled.connect(self.split_evenly_radio.setEnabled)
         # self.all_grade_all_radio.toggled.connect(self.assignment_changed.emit)
@@ -697,7 +709,6 @@ class GraderSplitWidget(QWidget):
         # Add to left side of HBox
         left_layout.addWidget(self.all_grade_all_radio)
         left_layout.addWidget(self.split_radio)
-        left_layout.addWidget(self.split_evenly_radio)
 
         # RIGHT SIDE: Repeat options
         # Set up the right side, with repeat options for intra-rater reliability
@@ -735,7 +746,6 @@ class GraderSplitWidget(QWidget):
         # COMBINE
         # Wiring
         self.split_radio.toggled.connect(lambda checked: (
-            self.split_evenly_radio.setEnabled(checked),
             self.assignment_changed.emit()
         ))
         self.all_grade_all_radio.toggled.connect(self.assignment_changed.emit)

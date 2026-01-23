@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QListWidget, QMessageBox, QFileDialog
 )
 from code.utils.app_paths import get_grader_studies_dir
-from code.grader.grader_window import GraderStartWindow
+from code.grader.grading_session import GradingSessionTab
 
 class GraderLanding(QWidget):
     def __init__(self):
@@ -154,8 +154,12 @@ class GraderLanding(QWidget):
 
     # ---------------- Begin Grading ----------------
     def begin_grading(self):
-        self.builder = GraderStartWindow(self.loaded_metadata,self.current_study_path,self.grader_name)
+        self.builder = GradingSessionTab(self.loaded_metadata,
+                                         self.current_study_path,
+                                         self.grader_name,
+                                         parent_window=self)
         self.builder.show()
+        self.study_info_label.setText("")
         self.hide()
 
     # ---------------- Download Grades ----------------

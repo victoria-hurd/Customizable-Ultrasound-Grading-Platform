@@ -2,16 +2,21 @@ import os
 import pandas as pd
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QScrollArea, QProgressBar, QRadioButton,
-                             QButtonGroup, QSlider, QMessageBox, QFileDialog)
+                             QButtonGroup, QSlider, QMessageBox, QApplication)
 from PyQt6.QtCore import Qt
 from code.grader.video_player import VideoPlayer
-from code.utils.schema import load_question_schema
-#from code.grader.grader_landing import GraderLanding
-
+from pathlib import Path
+from code.utils.app_paths import get_project_root,move_without_overwrite
 
 class GradingSessionTab(QWidget):
-    def __init__(self,loaded_metadata,current_study_path,grader_name):
+    def __init__(self,
+                 loaded_metadata,
+                 current_study_path,
+                 grader_name,
+                 parent_window=None):
         super().__init__()
+        self.showMaximized()
+        self.parent_window = parent_window
         self.study_name = loaded_metadata['study_name']
         self.study_folder = current_study_path
         self.grader_name = grader_name
@@ -39,28 +44,46 @@ class GradingSessionTab(QWidget):
             # Question label
             self.q_cols.append(f"{q['question_text']}")
         completed_reviews = self.grade_df.dropna(subset=self.q_cols).shape[0]
-        self.study_info_label = QLabel()
-        self.study_info_label.setText(
-            f"Study Name: {self.study_name}\n"
-            f"Grader: {self.grader_name}\n"
-            f"Total Requested Reviews: {total_reviews}\n"
-            f"Completed Reviews: {completed_reviews}\n"
-            f"Questions per Review: {len(self.questions)}\n"
-            f"Study Location: {self.study_folder}"
-        )
-        self.study_info_label.setWordWrap(True)
-        welcome_layout.addWidget(self.study_info_label)
+        study_info_label = QLabel()
 
-        # Instructions placeholder
-        self.instructions_label = QLabel("Instructions placeholder: fill in later.")
-        self.instructions_label.setWordWrap(True)
-        welcome_layout.addWidget(self.instructions_label)
+        # Metadata display
+        study_info_label = QLabel()
+        text = (
+            "<b>Grading Session Summary</b>\n"
+            f"<b>Study Name:</b> {self.study_name}<br>"
+            f"<b>Grader Name:</b> {self.grader_name}<br>"
+            f"<b>Total Number of Reviews Assigned to You:</b> {total_reviews}<br>"
+            f"<b>Reviews Completed So Far:</b> {completed_reviews}<br>"
+            f"<b>Questions per Review:</b> {len(self.questions)}"
+            )
 
-        # Start grading button
-        self.start_btn = QPushButton("Start Grading")
-        self.start_btn.setEnabled(True)
-        self.start_btn.clicked.connect(self.show_grading_ui)
-        welcome_layout.addWidget(self.start_btn)
+        study_info_label.setText(text)
+        study_info_label.setWordWrap(True)
+        welcome_layout.addWidget(study_info_label)
+
+        # Grader Instructions display
+        grader_instruction_label = QLabel("<b>Grader Instructions:</b>\n\n")
+        root = get_project_root()
+        instructions_location = os.path.join(root,"app_resources", "grader_instructions.txt")
+        with open(instructions_location) as f:
+            instructions = f.read()
+        instructions_label = QLabel(instructions)
+        instructions_label.setWordWrap(True)
+        welcome_layout.addWidget(grader_instruction_label)
+        welcome_layout.addWidget(instructions_label)
+
+        # Action buttons
+        action_bar = QHBoxLayout()
+        action_bar.addStretch()
+        back_btn = QPushButton("Back to Grader Landing")
+        back_btn.clicked.connect(self.go_back_to_grader_landing)
+        start_btn = QPushButton("Start Grading")
+        start_btn.clicked.connect(self.show_grading_ui)
+        action_bar.addWidget(back_btn)
+        action_bar.addWidget(start_btn)
+        welcome_layout.addLayout(action_bar)
+
+        welcome_layout.addStretch()
 
         self.layout_main.addWidget(self.welcome_widget)
 
@@ -73,15 +96,18 @@ class GradingSessionTab(QWidget):
 
         # Exit button in top-left
         exit_layout = QHBoxLayout()
-        self.exit_btn = QPushButton("Exit Grading")
-        self.exit_btn.clicked.connect(self.confirm_exit)
-        exit_layout.addWidget(self.exit_btn)
+        back_btn_2 = QPushButton("Back to Grader Landing")
+        back_btn_2.clicked.connect(self.go_back_to_grader_landing)
+        exit_btn = QPushButton("Exit Grading")
+        exit_btn.clicked.connect(self.confirm_exit)
+        exit_layout.addWidget(back_btn_2)
+        exit_layout.addWidget(exit_btn)
         exit_layout.addStretch()
         video_container.addLayout(exit_layout)
 
         # Video player
         self.video_player = VideoPlayer()
-        video_container.addWidget(self.video_player)
+        video_container.addWidget(self.video_player,stretch=3)
 
         # Video controls
         controls_layout = QHBoxLayout()
@@ -94,6 +120,7 @@ class GradingSessionTab(QWidget):
         self.play_btn.clicked.connect(self.video_player.play)
         self.pause_btn.clicked.connect(self.video_player.pause)
 
+        controls_layout.addStretch()
         controls_layout.addWidget(self.play_btn)
         controls_layout.addWidget(self.pause_btn)
         controls_layout.addStretch()
@@ -103,15 +130,17 @@ class GradingSessionTab(QWidget):
         # Scrubbing slider
         self.scrub_slider = QSlider(Qt.Orientation.Horizontal)
         self.scrub_slider.setMinimum(0)
-        self.scrub_slider.setMaximum(100)  # We'll update dynamically based on video length
+        #self.scrub_slider.setMaximum(100)  # We'll update dynamically based on video length
         video_container.addWidget(self.scrub_slider)
         self.video_player.set_slider(self.scrub_slider)
-        #self.scrub_slider.sliderMoved.connect(self.scrub_video)
-        self.scrub_slider.valueChanged.connect(self.scrub_video)
 
         # Progress bar at the bottom of video container
+        progress_layout = QHBoxLayout()
         self.progress_bar = QProgressBar()
-        video_container.addWidget(self.progress_bar)
+        self.progress_label = QLabel(f"Video {self.current_index+1} of {len(self.grade_df)}")
+        progress_layout.addWidget(self.progress_bar)
+        progress_layout.addWidget(self.progress_label)
+        video_container.addLayout(progress_layout)
 
         grading_layout.addLayout(video_container, stretch=3)  # Take 3/4 of horizontal space
 
@@ -133,9 +162,49 @@ class GradingSessionTab(QWidget):
         self.grading_widget.setVisible(False)
         self.layout_main.addWidget(self.grading_widget)
 
+        # ---------------- Post-Grading Section ----------------
+        self.post_grading_widget = QWidget()
+        post_grading_layout = QVBoxLayout(self.post_grading_widget)
+
+        # Post-Grading Panel with Instructions and Exit
+        end_session_label = QLabel("<b>Grading Session Complete</b>\n\n")
+        root = get_project_root()
+        end_session_instructions_location = os.path.join(root,"app_resources", "session_end_instructions.txt")
+        with open(end_session_instructions_location) as f:
+            end_session_instructions = f.read()
+        end_session_instructions_label = QLabel(end_session_instructions)
+        end_session_instructions_label.setWordWrap(True)
+        post_grading_layout.addWidget(end_session_label)
+        post_grading_layout.addWidget(end_session_instructions_label)
+
+        # Download data button
+        download_box = QHBoxLayout()
+        download_btn = QPushButton("Download Graded Data CSV")
+        download_btn.clicked.connect(self.download_graded_data)
+        download_box.addWidget(download_btn)
+        download_box.addStretch()
+        post_grading_layout.addLayout(download_box)
+        post_grading_layout.addSpacing(20)
+
+        # Exit action buttons
+        action_bar_post = QHBoxLayout()
+        action_bar_post.addStretch()
+        back_btn_3 = QPushButton("Back to Grader Landing")
+        back_btn_3.clicked.connect(self.go_back_to_grader_landing)
+        exit_btn_2 = QPushButton("Exit Application")
+        exit_btn_2.clicked.connect(self.confirm_exit)
+        action_bar_post.addWidget(back_btn_3)
+        action_bar_post.addWidget(exit_btn_2)
+        post_grading_layout.addLayout(action_bar_post)
+        post_grading_layout.addStretch()
+
+        self.post_grading_widget.setVisible(False)
+        self.layout_main.addWidget(self.post_grading_widget)
+
 
     # ---------------- Grading Functions ----------------
     def show_grading_ui(self):
+        self.showMaximized()
         self.welcome_widget.setVisible(False)
         self.grading_widget.setVisible(True)
         # generate question column names
@@ -190,6 +259,7 @@ class GradingSessionTab(QWidget):
 
 
         self.progress_bar.setValue(self.current_index)
+        self.progress_label.setText(f"Video {self.current_index+1} of {len(self.grade_df)}")
 
     def save_and_next(self):
         row_index = self.current_index
@@ -216,24 +286,26 @@ class GradingSessionTab(QWidget):
         # Advance
         self.current_index += 1
         self.progress_bar.setValue(self.current_index)
+        self.progress_label.setText(f"Video {self.current_index+1} of {len(self.grade_df)}")
 
         if self.current_index >= len(self.grade_df):
-            QMessageBox.information(
-                self,
-                "Grading Complete",
-                "All reviews completed! Answers saved."
-            )
-            self.exit_grading()
+            # If grading is complete, show post-grading UI
+            self.show_post_ui()
         else:
+            # Otherwise, load next video
             self.load_current_video()
 
-    # ---------------- Video Scrubbing ----------------
-    def scrub_video(self):
-        if hasattr(self.video_player, 'seek'):
-            pos_percent = self.scrub_slider.value() / 100
-            self.video_player.seek(pos_percent)
-
     # ---------------- Exit Grading ----------------
+    def show_post_ui(self):
+        self.showMaximized()
+        self.grading_widget.setVisible(False)
+        self.post_grading_widget.setVisible(True)
+
+    def download_graded_data(self):
+        downloads_folder = str(Path.home() / "Downloads")
+        move_without_overwrite(self.grade_data_path, downloads_folder, mode='copy')
+        QMessageBox.information(self, "Download Complete", f"Grades copied to {downloads_folder}")
+
     def confirm_exit(self):
         reply = QMessageBox.question(
             self,
@@ -245,4 +317,9 @@ class GradingSessionTab(QWidget):
             self.exit_grading()
 
     def exit_grading(self):
-        self.parentWidget().close()
+        QApplication.instance().quit()
+
+    def go_back_to_grader_landing(self):
+        if self.parent_window:
+            self.parent_window.show()  # show the grader landing page
+        self.close()

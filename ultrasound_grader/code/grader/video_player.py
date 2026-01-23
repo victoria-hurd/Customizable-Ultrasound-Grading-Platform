@@ -1,44 +1,43 @@
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtMultimediaWidgets import QVideoWidget
-from PyQt6.QtCore import QUrl, Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout
-
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSlider
 import os
 
 class VideoPlayer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # Media Player
         self.media_player = QMediaPlayer()
         self.audio_output = QAudioOutput()
         self.media_player.setAudioOutput(self.audio_output)
 
+        # Video Widget
         self.video_widget = QVideoWidget()
         self.media_player.setVideoOutput(self.video_widget)
 
+        # Layout
         layout = QVBoxLayout()
         layout.addWidget(self.video_widget)
         self.setLayout(layout)
 
-        # Track slider externally
+        # Slider
         self.slider = None
+        self.media_player.positionChanged.connect(self._update_slider)
+        self.media_player.durationChanged.connect(self._update_slider_range)
+        self.media_player.mediaStatusChanged.connect(self._handle_media_status)
 
-        # Connect media_player signals
-        self.media_player.positionChanged.connect(self.update_slider)
-        self.media_player.durationChanged.connect(self.update_slider_range)
-
-    def set_slider(self, slider):
-        """Assign the slider to control this video"""
-        self.slider = slider
-        self.slider.setValue(0)
-        self.slider.sliderReleased.connect(self.slider_released)
-
-    def load_video(self, path):
+    # ---------------- Video Controls ----------------
+    def load_video(self, path: str):
         if not os.path.exists(path):
             raise FileNotFoundError(f"Video not found: {path}")
+        from PyQt6.QtCore import QUrl
         self.media_player.setSource(QUrl.fromLocalFile(path))
         self.media_player.stop()
 
-    def play(self):
+    def play(self): 
+        if self.media_player.position() >= self.media_player.duration() - 5:
+            self.media_player.setPosition(0)
         self.media_player.play()
 
     def pause(self):
@@ -47,29 +46,25 @@ class VideoPlayer(QWidget):
     def stop(self):
         self.media_player.stop()
 
-    def seek(self, percent):
-        """Seek to a percentage of the video (0.0 - 1.0)"""
-        duration = self.media_player.duration()
-        if duration > 0:
-            self.media_player.setPosition(int(duration * percent))
+    # ---------------- Slider ----------------
+    def set_slider(self, slider: QSlider):
+        self.slider = slider
+        self.slider.setValue(0)
+        self.slider.sliderMoved.connect(self._slider_moved)
 
-    # ---------------- Slot for slider ----------------
-    def update_slider(self, position):
-        """Update slider position as video plays"""
-        if self.slider and self.media_player.duration() > 0:
-            value = int((position / self.media_player.duration()) * 100)
-            self.slider.blockSignals(True)  # prevent recursion
-            self.slider.setValue(value)
-            self.slider.blockSignals(False)
-
-    def update_slider_range(self, duration):
-        """Ensure slider is reset when video loads"""
+    def _update_slider_range(self, duration):
         if self.slider:
-            self.slider.setMinimum(0)
-            self.slider.setMaximum(100)
+            self.slider.setRange(0, duration)
 
-    def slider_released(self):
-        """When user drags slider, update video position"""
-        if self.slider:
-            percent = self.slider.value() / 100
-            self.seek(percent)
+    def _update_slider(self, position):
+        if self.slider and not self.slider.isSliderDown():
+            self.slider.setValue(position)
+
+    def _slider_moved(self, position):
+        self.media_player.setPosition(position)
+
+    def _handle_media_status(self, status):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.pause()
+            self.media_player.setPosition(self.media_player.duration())
+
