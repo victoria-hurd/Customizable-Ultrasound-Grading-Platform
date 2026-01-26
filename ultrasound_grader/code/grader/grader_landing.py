@@ -6,23 +6,39 @@ from pathlib import Path
 import pandas as pd
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QListWidget, QMessageBox, QFileDialog
+    QListWidget, QMessageBox, QFileDialog, QApplication
 )
 from code.utils.app_paths import get_grader_studies_dir
 from code.grader.grading_session import GradingSessionTab
 
 class GraderLanding(QWidget):
-    def __init__(self):
+    def __init__(self,
+        parent_window=None):
         super().__init__()
         self.setWindowTitle("Grader Landing Page")
-        self.layout_main = QHBoxLayout(self)
-        self.setLayout(self.layout_main)
-
+        self.parent_window = parent_window
+        #self.layout_main = QHBoxLayout(self)
+        #self.setLayout(self.layout_main)
+        self.layout_outer = QVBoxLayout(self)
+        self.setLayout(self.layout_outer)
+        self.layout_main = QHBoxLayout()
+        # ---------------- Back and Exit Buttons ----------------
+        action_bar = QHBoxLayout()
+        exit_btn = QPushButton("Exit")
+        exit_btn.clicked.connect(QApplication.instance().quit)
+        back_btn = QPushButton("Back")
+        back_btn.clicked.connect(self.go_back_to_main)
+        refresh_btn = QPushButton("Refresh Data")
+        refresh_btn.clicked.connect(self.refresh)
+        action_bar.addWidget(exit_btn)
+        action_bar.addWidget(back_btn)
+        action_bar.addWidget(refresh_btn)
+        action_bar.addStretch()
+        self.layout_outer.addLayout(action_bar)
+        # ---------------- Rest of layout ----------------
         self.grader_studies_dir = str(get_grader_studies_dir())
-
         self.studies_list = QListWidget()
         self.studies_list.itemSelectionChanged.connect(self.on_study_selected)
-
         self.right_panel = QVBoxLayout()
         self.study_info_label = QLabel("Select a study to see details.")
         self.start_grading_btn = QPushButton("Begin Grading")
@@ -47,6 +63,7 @@ class GraderLanding(QWidget):
 
         self.layout_main.addLayout(left_panel, stretch=1)
         self.layout_main.addLayout(self.right_panel, stretch=2)
+        self.layout_outer.addLayout(self.layout_main)
 
         self.load_existing_studies()
 
@@ -168,4 +185,15 @@ class GraderLanding(QWidget):
         shutil.copy(self.grade_data_path, downloads_folder)
         QMessageBox.information(self, "Download Complete", f"Grades copied to {downloads_folder}")
         self.load_existing_studies()  # refresh landing page
+
+    def go_back_to_main(self):
+        if self.parent_window:
+            self.parent_window.show()  # show the admin landing page
+        self.close()
+
+    def refresh(self):
+        self.load_existing_studies()
+        self.studies_list.clearSelection()
+        
+
     

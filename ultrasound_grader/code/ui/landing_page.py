@@ -25,11 +25,11 @@ class LandingPage(QWidget):
         layout.addWidget(grader_btn)
 
     def open_admin(self):
-        self.admin_window = AdminLanding()
+        self.admin_window = AdminLanding(parent_window=self)
         self.admin_window.show()
         self.close()
 
     def open_grader(self):
-        self.grader_window = GraderLanding()
+        self.grader_window = GraderLanding(parent_window=self)
         self.grader_window.show()
         self.close()

@@ -99,7 +99,7 @@ class GradingSessionTab(QWidget):
         back_btn_2 = QPushButton("Back to Grader Landing")
         back_btn_2.clicked.connect(self.go_back_to_grader_landing)
         exit_btn = QPushButton("Exit Grading")
-        exit_btn.clicked.connect(self.confirm_exit)
+        exit_btn.clicked.connect(self.exit_grading)
         exit_layout.addWidget(back_btn_2)
         exit_layout.addWidget(exit_btn)
         exit_layout.addStretch()
