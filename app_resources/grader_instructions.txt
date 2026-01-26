@@ -1,0 +1,9 @@
+You are about to begin a grading session for the study listed above. Please read through the following reminders before beginning the session:
+
+1. Before starting, turn your screen brightness all the way up for better anatomy visualization. 
+2. You will be shown a video and asked questions about each one. You will be required to answer all questions before continuing to the next video. 
+3. You will be able to play, pause, and scrub through each video. 
+4. Once you enter your answers for a video, you will not be able to go back and change your assessment. 
+5. If you exit the grading session before finishing all requested reviews, your progress will be saved and you will be able to pick up where you left off during your next session. 
+
+Press the "Start Grading Session" button to begin. 
