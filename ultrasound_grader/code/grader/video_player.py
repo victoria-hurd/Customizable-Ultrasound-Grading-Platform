@@ -65,6 +65,7 @@ class VideoPlayer(QWidget):
 
     def _handle_media_status(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
-            self.pause()
+            #self.pause()
+            self.stop()
             self.media_player.setPosition(self.media_player.duration())
 

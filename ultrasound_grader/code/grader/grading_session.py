@@ -112,17 +112,18 @@ class GradingSessionTab(QWidget):
         # Video controls
         controls_layout = QHBoxLayout()
         self.play_btn = QPushButton("Play")
-        self.pause_btn = QPushButton("Pause")
+        #self.pause_btn = QPushButton("Pause")
         self.next_btn = QPushButton("Save Grades and Advance to Next Video")
         self.next_btn.clicked.connect(self.save_and_next)
 
         # Connect play/pause buttons
-        self.play_btn.clicked.connect(self.video_player.play)
-        self.pause_btn.clicked.connect(self.video_player.pause)
+        #self.play_btn.clicked.connect(self.video_player.play)
+        self.play_btn.clicked.connect(self.play_and_disable)
+        #self.pause_btn.clicked.connect(self.video_player.pause)
 
         controls_layout.addStretch()
         controls_layout.addWidget(self.play_btn)
-        controls_layout.addWidget(self.pause_btn)
+        #controls_layout.addWidget(self.pause_btn)
         controls_layout.addStretch()
         controls_layout.addWidget(self.next_btn)
         video_container.addLayout(controls_layout)
@@ -133,6 +134,7 @@ class GradingSessionTab(QWidget):
         #self.scrub_slider.setMaximum(100)  # We'll update dynamically based on video length
         video_container.addWidget(self.scrub_slider)
         self.video_player.set_slider(self.scrub_slider)
+        self.scrub_slider.setDisabled(True)
 
         # Progress bar at the bottom of video container
         progress_layout = QHBoxLayout()
@@ -294,6 +296,10 @@ class GradingSessionTab(QWidget):
         else:
             # Otherwise, load next video
             self.load_current_video()
+
+    def play_and_disable(self):
+        self.video_player.play()
+        self.play_btn.setEnabled(False)
 
     # ---------------- Exit Grading ----------------
     def show_post_ui(self):
