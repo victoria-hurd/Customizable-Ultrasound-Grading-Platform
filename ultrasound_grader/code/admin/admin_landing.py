@@ -1,18 +1,37 @@
 import os
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QListWidget,
-    QPushButton, QMessageBox
+    QPushButton, QMessageBox, QHBoxLayout, QApplication
 )
 from code.utils.app_paths import get_admin_studies_dir
 from code.admin.create_study_tab import CreateStudyTab
 from code.admin.results_review import ReviewResultsWindow
 
 class AdminLanding(QWidget):
-    def __init__(self):
+    def __init__(self,
+        parent_window=None):
         super().__init__()
         self.setWindowTitle("Admin: Studies")
+        self.parent_window = parent_window
 
         layout = QVBoxLayout(self)
+
+        # ---------------- Back and Exit Buttons ----------------
+        action_bar = QHBoxLayout()
+        exit_btn = QPushButton("Exit")
+        exit_btn.clicked.connect(QApplication.instance().quit)
+        back_btn = QPushButton("Back")
+        back_btn.clicked.connect(self.go_back_to_main)
+        refresh_btn = QPushButton("Refresh Data")
+        refresh_btn.clicked.connect(self.refresh)
+        action_bar.addWidget(exit_btn)
+        action_bar.addWidget(back_btn)
+        action_bar.addStretch()
+        action_bar.addWidget(refresh_btn)
+        
+        layout.addLayout(action_bar)
+
+        # ---------------- Admin Functions ----------------
 
         layout.addWidget(QLabel("Existing Studies"))
 
@@ -36,6 +55,7 @@ class AdminLanding(QWidget):
         btn_layout.addWidget(self.results_btn)
 
         layout.addLayout(btn_layout)
+
 
     def refresh_studies(self):
         self.study_list.clear()
@@ -77,6 +97,16 @@ class AdminLanding(QWidget):
         self.review_window = ReviewResultsWindow(study_path, parent_window=self)
         self.review_window.show()
         self.hide()
+
+    def go_back_to_main(self):
+        if self.parent_window:
+            self.parent_window.show()  # show the admin landing page
+        self.close()
+
+    def refresh(self):
+        self.refresh_studies()
+        self.study_list.clearSelection()
+
 
 
 

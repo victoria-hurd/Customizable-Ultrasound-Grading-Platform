@@ -1,9 +1,18 @@
 from pathlib import Path
 import shutil
+import sys
+import os
 
 def get_project_root():
-    # project_root/code/utils/app_paths.py → parents[2] = project_root
-    return Path(__file__).resolve().parents[2]
+    # Start from the exe location if frozen, else script location
+    if getattr(sys, 'frozen', False):
+        path = os.path.dirname(sys.executable)
+    else:
+        path = os.path.dirname(os.path.abspath(__file__))
+
+    # Move up two directories (adjust if needed)
+    app_root = Path(os.path.abspath(os.path.join(path, ".." , "..", "..")))
+    return app_root
 
 def get_app_data_dir():
     return get_project_root() / "App Data"
