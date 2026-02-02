@@ -66,7 +66,7 @@ class GradingSessionTab(QWidget):
         # Grader Instructions display
         grader_instruction_label = QLabel("<b>Grader Instructions:</b>\n\n")
         root = get_project_root()
-        instructions_location = os.path.join(root,"app_resources", "grader_instructions.txt")
+        instructions_location = os.path.join(root,"ultrasound_grader","app_resources", "grader_instructions.txt")
         with open(instructions_location) as f:
             instructions = f.read()
         instructions_label = QLabel(instructions)
@@ -171,7 +171,7 @@ class GradingSessionTab(QWidget):
         # Post-Grading Panel with Instructions and Exit
         end_session_label = QLabel("<b>Grading Session Complete</b>\n\n")
         root = get_project_root()
-        end_session_instructions_location = os.path.join(root,"app_resources", "session_end_instructions.txt")
+        end_session_instructions_location = os.path.join(root,"ultrasound_grader","app_resources", "session_end_instructions.txt")
         with open(end_session_instructions_location) as f:
             end_session_instructions = f.read()
         end_session_instructions_label = QLabel(end_session_instructions)

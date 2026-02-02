@@ -3,19 +3,33 @@ import shutil
 import sys
 import os
 
-def get_project_root():
-    # Start from the exe location if frozen, else script location
-    if getattr(sys, 'frozen', False):
-        path = os.path.dirname(sys.executable)
-    else:
-        path = os.path.dirname(os.path.abspath(__file__))
+# def get_project_root():
+#     # Start from the exe location if frozen, else script location
+#     if getattr(sys, 'frozen', False):
+#         path = os.path.dirname(sys.executable)
+#     else:
+#         path = os.path.dirname(os.path.abspath(__file__))
 
-    # Move up two directories (adjust if needed)
-    app_root = Path(os.path.abspath(os.path.join(path, ".." , "..", "..")))
-    return app_root
+#     # Move up two directories (adjust if needed)
+#     app_root = Path(os.path.abspath(os.path.join(path, ".." , "..", "..")))
+#     return app_root
+
+def get_project_root():
+    """
+    relative_path = "app_resources/xyz.jpg"
+    relative_path = pathlib.Path("app_resources") / "XYZ.jpg"
+    relative_path = os.path.join("app_resources","xyz.jpg")
+    """
+    dev_base_path = Path(__file__).resolve().parent.parent
+    base_path = getattr(sys, "_MEIPASS", dev_base_path)
+
+    return base_path
+
+def get_resource_dir():
+    return get_project_root() / "app_resources"
 
 def get_app_data_dir():
-    return get_project_root() / "App Data"
+    return get_project_root().parent.parent / "App Data"
 
 def get_admin_studies_dir():
     return get_app_data_dir() / "Admin Studies"

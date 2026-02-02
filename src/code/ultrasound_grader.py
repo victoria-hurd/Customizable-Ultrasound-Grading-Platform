@@ -1,14 +1,17 @@
 import sys
 import os
+import pathlib
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
-from code.utils.app_paths import ensure_app_directories, get_project_root
+from code.utils.app_paths import ensure_app_directories, get_project_root, get_resource_dir
 from code.ui.landing_page import LandingPage
+#from code.resources import get_resource_path
 
 def main():
+    APP_RESOURCES_DIR = get_resource_dir()
+
     ensure_app_directories()
-    icon_path = os.path.join(get_project_root(), "app_resources", "icons", "ultrasoundastronaut.png")
-    print(icon_path)
+    icon_path = os.path.join(APP_RESOURCES_DIR, "icons", "ultrasoundastronaut.png")
     app = QApplication(sys.argv)
     window = LandingPage()
     window.setWindowIcon(QIcon(str(icon_path)))
