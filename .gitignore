@@ -4,9 +4,10 @@
 *.pyc
 # Ignoring created output app data during development
 /App Data/*
+src/App Data/*
 # Ignoring created UI Testing folder from development
 /UI Testing/*
 # Ignoring build/distribution files
-ultrasound_grader/build/*
-ultrasound_grader/dist/*
-ultrasound_grader/ultrasound_grader.spec
+src/build/*
+src/dist/*
+src/ultrasound_grader.spec
