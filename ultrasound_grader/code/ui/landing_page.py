@@ -1,6 +1,4 @@
-from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QPushButton
-)
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
 from code.admin.admin_landing import AdminLanding
 from code.grader.grader_landing import GraderLanding
 

@@ -1,8 +1,7 @@
 import os
-from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QListWidget,
-    QPushButton, QMessageBox, QHBoxLayout, QApplication
-)
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QListWidget, 
+                             QPushButton, QMessageBox, QHBoxLayout, 
+                             QApplication)
 from code.utils.app_paths import get_admin_studies_dir
 from code.admin.create_study_tab import CreateStudyTab
 from code.admin.results_review import ReviewResultsWindow

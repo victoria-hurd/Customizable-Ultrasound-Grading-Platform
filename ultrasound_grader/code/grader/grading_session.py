@@ -1,11 +1,13 @@
 import os
-import pandas as pd
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-                             QPushButton, QScrollArea, QProgressBar, QRadioButton,
-                             QButtonGroup, QSlider, QMessageBox, QApplication)
-from PyQt6.QtCore import Qt
-from code.grader.video_player import VideoPlayer
 from pathlib import Path
+from PyQt6.QtCore import Qt
+from pandas import read_csv as pd_read_csv
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                             QPushButton, QScrollArea, QProgressBar, 
+                             QRadioButton, QButtonGroup, QSlider, 
+                             QMessageBox, QApplication)
+
+from code.grader.video_player import VideoPlayer
 from code.utils.app_paths import get_project_root,move_without_overwrite
 
 class GradingSessionTab(QWidget):
@@ -24,7 +26,7 @@ class GradingSessionTab(QWidget):
         self.current_index = 0
         output_dir = os.path.join(self.study_folder, "Output Grade Data")
         self.grade_data_path = os.path.join(output_dir, f"{self.grader_name}_{self.study_name}_grade_data.csv")
-        self.grade_df = pd.read_csv(self.grade_data_path)
+        self.grade_df = pd_read_csv(self.grade_data_path)
         self.answers = {}
 
         self._build_ui()

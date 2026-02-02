@@ -1,14 +1,12 @@
 import os
-import json
-import shutil
 from PyQt6.QtWidgets import (QHBoxLayout, QListWidgetItem, QScrollArea, 
     QWidget, QVBoxLayout, QLabel, QMessageBox, QListWidget,QApplication,
     QPushButton, QFileDialog, QTableWidget, QHeaderView, QTableWidgetItem)
 from PyQt6.QtCore import Qt
-import pandas as pd
-import numpy as np
-from statsmodels.stats.inter_rater import fleiss_kappa,aggregate_raters
 from pathlib import Path
+from json import load as json_load
+from shutil import copy as shutil_copy
+from pandas import read_csv as pd_read_csv, concat as pd_concat
 
 class ReviewResultsWindow(QWidget):
     def __init__(self, study_path, parent_window=None):
@@ -26,7 +24,7 @@ class ReviewResultsWindow(QWidget):
         metadata_path = os.path.join(study_path, "study_metadata.json")
         if os.path.exists(metadata_path):
             with open(metadata_path, "r") as f:
-                metadata = json.load(f)
+                metadata = json_load(f)
             
             self.study_name = metadata['study_name']
             self.questions = metadata['questions']
@@ -96,8 +94,8 @@ class ReviewResultsWindow(QWidget):
             return
 
         # Concatenate all grader files and store for download
-        all_dfs = [pd.read_csv(f) for f in files]
-        df_all = pd.concat(all_dfs, ignore_index=True)
+        all_dfs = [pd_read_csv(f) for f in files]
+        df_all = pd_concat(all_dfs, ignore_index=True)
         self.concat_df = df_all  # store in self for download
 
         # generate question column names from metadata
@@ -209,7 +207,7 @@ class GraderFileWidget(QWidget):
         # Copy selected files into Grader Files folder
         for f in files:
             dest = os.path.join(self.grader_dir, os.path.basename(f))
-            shutil.copy(f, dest)
+            shutil_copy(f, dest)
 
         self.populate_file_list()
     

@@ -1,5 +1,4 @@
 import os
-import json
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QFileDialog, QLineEdit,
                              QScrollArea, QGroupBox, QMessageBox,
@@ -9,9 +8,10 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 from PyQt6.QtCore import pyqtSignal, Qt 
 from zipfile import ZipFile
 from pathlib import Path
-import shutil
-import random
-import pandas as pd
+from shutil import copy as shutil_copy
+from json import dump as json_dump, load as json_load
+from random import shuffle as random_shuffle
+from pandas import read_csv as pd_read_csv, DataFrame as pd_DataFrame
 from code.utils.schema import load_question_schema
 from code.utils.app_paths import get_admin_studies_dir, move_without_overwrite
 
@@ -248,7 +248,7 @@ class CreateStudyTab(QWidget):
 
         else:
             # Split evenly among graders
-            random.shuffle(media_files)
+            random_shuffle(media_files)
             num_graders = len(graders)
             for idx, f in enumerate(media_files):
                 grader = graders[idx % num_graders]
@@ -263,8 +263,7 @@ class CreateStudyTab(QWidget):
                     })
                 deid_counter += 1
 
-        import pandas as pd
-        df = pd.DataFrame(assignments)
+        df = pd_DataFrame(assignments)
         df.to_csv(all_requests_csv_path, index=False)
 
         self.review_type = "nominal"
@@ -280,7 +279,7 @@ class CreateStudyTab(QWidget):
         }
         metadata_path = os.path.join(self.source_study_path, "study_metadata.json")
         with open(metadata_path, "w") as f:
-            json.dump(study_metadata, f, indent=4)
+            json_dump(study_metadata, f, indent=4)
 
         # Show success panel with summary, study folder, and grader releases button
         self.show_study_success(study_name, self.source_study_path, data_folder, graders, assignment, repeat_count, len(media_files),)
@@ -424,7 +423,7 @@ class CreateStudyTab(QWidget):
             return
 
         # Read master CSV
-        df = pd.read_csv(requests_csv)
+        df = pd_read_csv(requests_csv)
 
         # Create grader releases root folder
         releases_folder = os.path.join(self.current_study_folder, "Grader Releases")
@@ -450,7 +449,7 @@ class CreateStudyTab(QWidget):
                 src_file = os.path.join(self.image_folder_label.text(), row["original_filename"])
                 dest_file = os.path.join(raw_folder, row["deidentified_filename"])
                 if os.path.exists(src_file):
-                    shutil.copy(src_file, dest_file)
+                    shutil_copy(src_file, dest_file)
                 else:
                     print(f"Warning: source file not found: {src_file}")
 
@@ -467,7 +466,7 @@ class CreateStudyTab(QWidget):
             # Copy over the metadata file
             metadata_file = os.path.join(self.current_study_folder, "study_metadata.json")
             if os.path.exists(metadata_file):
-                shutil.copy(metadata_file, os.path.join(grader_folder, "study_metadata.json"))
+                shutil_copy(metadata_file, os.path.join(grader_folder, "study_metadata.json"))
             else:
                 print(f"Warning: source file not found: {metadata_file}")
             # Zip the grader folder
@@ -547,7 +546,7 @@ class CreateStudyTab(QWidget):
             return
 
         with open(metadata_path, "r") as f:
-            metadata = json.load(f)
+            metadata = json_load(f)
 
         # Populate fields
         self.study_name_input.setText(metadata.get("study_name", ""))

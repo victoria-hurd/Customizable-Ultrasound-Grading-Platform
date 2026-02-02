@@ -1,13 +1,13 @@
-import json
 import os
-import zipfile
-import shutil
 from pathlib import Path
-import pandas as pd
-from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QListWidget, QMessageBox, QFileDialog, QApplication
-)
+from zipfile import ZipFile
+from json import load as json_load
+from pandas import read_csv as pd_read_csv, NA as pd_NA
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
+                             QPushButton, QLabel, QListWidget, 
+                             QMessageBox, QFileDialog, QApplication)
+
+from shutil import copy as shutil_copy
 from code.utils.app_paths import get_grader_studies_dir
 from code.grader.grading_session import GradingSessionTab
 
@@ -88,7 +88,7 @@ class GraderLanding(QWidget):
         study_metadata_path = os.path.join(self.current_study_path, "study_metadata.json")
         if os.path.exists(study_metadata_path):
             with open(study_metadata_path, "r") as f:
-                self.loaded_metadata = json.load(f)
+                self.loaded_metadata = json_load(f)
         else:
             QMessageBox.critical(self, "Error", f"Master info not found for {release_name}")
             return
@@ -98,7 +98,7 @@ class GraderLanding(QWidget):
         # Read grader request file
         grade_request_file = list(Path(self.current_study_path).glob("*_grade_request.csv"))[0]
         if os.path.exists(grade_request_file):
-            df_request = pd.read_csv(grade_request_file)
+            df_request = pd_read_csv(grade_request_file)
             self.grader_name = df_request['assigned_grader'][0]
         else:
             QMessageBox.critical(self, "Error", f"Grade request CSV not found for {grade_request_file}")
@@ -117,16 +117,16 @@ class GraderLanding(QWidget):
 
         if not os.path.exists(self.grade_data_path):
             # Copy initial request CSV to output as working file
-            shutil.copy(grade_request_file, self.grade_data_path)
+            shutil_copy(grade_request_file, self.grade_data_path)
             # Add empty columns for each question
-            df_output = pd.read_csv(self.grade_data_path)
+            df_output = pd_read_csv(self.grade_data_path)
             # Add the new columns with NA values
             for col_name in q_cols:
-                df_output[col_name] = pd.NA
+                df_output[col_name] = pd_NA
             # Rewrite the grade data file with new columns
             df_output.to_csv(self.grade_data_path, index=False)
         else:
-            df_output = pd.read_csv(self.grade_data_path)
+            df_output = pd_read_csv(self.grade_data_path)
 
         # Count total and completed reviews
         total_reviews = len(df_output)
@@ -163,7 +163,7 @@ class GraderLanding(QWidget):
         # Create a specific output directory for this archive
         self.current_study_path = os.path.join(self.grader_studies_dir, archive_name)
 
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        with ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(self.grader_studies_dir)
 
         self.load_existing_studies()
@@ -182,7 +182,7 @@ class GraderLanding(QWidget):
     # ---------------- Download Grades ----------------
     def download_grades(self):
         downloads_folder = str(Path.home() / "Downloads")
-        shutil.copy(self.grade_data_path, downloads_folder)
+        shutil_copy(self.grade_data_path, downloads_folder)
         QMessageBox.information(self, "Download Complete", f"Grades copied to {downloads_folder}")
         self.load_existing_studies()  # refresh landing page
 

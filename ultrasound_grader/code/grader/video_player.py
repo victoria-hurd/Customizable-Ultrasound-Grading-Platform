@@ -1,7 +1,7 @@
+import os
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSlider
-import os
 
 class VideoPlayer(QWidget):
     def __init__(self, parent=None):
