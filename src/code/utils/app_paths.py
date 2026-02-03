@@ -1,18 +1,6 @@
 from pathlib import Path
 import shutil
 import sys
-import os
-
-# def get_project_root():
-#     # Start from the exe location if frozen, else script location
-#     if getattr(sys, 'frozen', False):
-#         path = os.path.dirname(sys.executable)
-#     else:
-#         path = os.path.dirname(os.path.abspath(__file__))
-
-#     # Move up two directories (adjust if needed)
-#     app_root = Path(os.path.abspath(os.path.join(path, ".." , "..", "..")))
-#     return app_root
 
 def get_project_root():
     """
@@ -23,10 +11,12 @@ def get_project_root():
     dev_base_path = Path(__file__).resolve().parent.parent
     base_path = getattr(sys, "_MEIPASS", dev_base_path)
 
-    return base_path
+    return Path(base_path)
 
 def get_resource_dir():
-    return get_project_root() / "app_resources"
+    base_path = get_project_root()
+    app_resource_dir = base_path / "app_resources"
+    return app_resource_dir
 
 def get_app_data_dir():
     return get_project_root().parent.parent / "App Data"
