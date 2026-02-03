@@ -7,8 +7,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
                              QPushButton, QLabel, QListWidget, 
                              QMessageBox, QFileDialog, QApplication)
 
-from shutil import copy as shutil_copy, rmtree as shutil_rmtree
-from code.utils.app_paths import get_grader_studies_dir
+from shutil import copy as shutil_copy, rmtree as shutil_rmtree, copyfileobj as shutil_copyfileobj
+from code.utils.app_paths import get_grader_studies_dir,unique_folder_in_dir
 from code.grader.grading_session import GradingSessionTab
 
 class GraderLanding(QWidget):
@@ -167,18 +167,37 @@ class GraderLanding(QWidget):
         zip_path, _ = QFileDialog.getOpenFileName(self, "Select Study Zip", filter="Zip Files (*.zip)")
         if not zip_path:
             return
-        
-        # Get the name of the zip file (without extension) to use as a subfolder
-        archive_name = os.path.basename(zip_path).replace('.zip', '')
-        # Create a specific output directory for this archive
-        self.current_study_path = os.path.join(self.grader_studies_dir, archive_name)
 
-        with ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(self.grader_studies_dir)
+        with ZipFile(zip_path, "r") as zip_ref:
+            all_names = zip_ref.namelist()
+            top_dir = all_names[0]
+            folder_name = Path(top_dir).parent
+            folder_path = unique_folder_in_dir(self.grader_studies_dir,folder_name)
+            os.makedirs(folder_path)
+            for member in zip_ref.namelist():
+                if member.endswith('/'):
+                    continue
+                    
+                # Extract just the filename (basename)
+                filename = os.path.basename(member)
+                
+                # Skip if the member is a directory entry
+                if not filename:
+                    continue
+
+                # Define the full path for the extracted file
+                target_path = os.path.join(folder_path, filename)
+                source = zip_ref.open(member)
+                target = open(target_path, "wb")
+                try:
+                    shutil_copyfileobj(source, target)
+                finally:
+                    source.close()
+                    target.close()
 
         self.load_existing_studies()
         self.studies_list.clearSelection()
-        QMessageBox.information(self, "Success", f"Successfully loaded grade request {archive_name}")
+        QMessageBox.information(self, "Success", f"Successfully loaded grade request {folder_path.stem}")
 
     # ---------------- Delete Previous Study ----------------
     def delete_study(self):

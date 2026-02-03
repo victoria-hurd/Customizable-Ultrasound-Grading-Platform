@@ -65,3 +65,25 @@ def move_without_overwrite(source_path, destination_dir, mode='move'):
                     shutil.move(str(source_path), str(new_destination_path))
                 return new_destination_path
             counter += 1
+
+def unique_folder_in_dir(destination_dir,source_path):
+    source_path = Path(source_path)
+    destination_dir = Path(destination_dir)
+    # Start with the original destination path
+    destination_path = destination_dir / source_path.stem
+    if not destination_path.exists():
+        # If doesn't exist, destination path is just destination + filename
+        return destination_path
+    else:
+        # If the file exists, generate a new name
+        stem = source_path.stem # file without extension
+        counter = 1
+        
+        while True:
+            new_filename = f"{stem}_{counter}"
+            new_destination_path = destination_dir / new_filename
+            
+            if not new_destination_path.exists():
+                # Found a unique name, return it
+                return new_destination_path
+            counter += 1
