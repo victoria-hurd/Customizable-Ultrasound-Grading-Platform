@@ -139,13 +139,13 @@ class GraderLanding(QWidget):
             df_output = pd_read_csv(self.grade_data_path)
 
         # Count total and completed reviews
-        total_reviews = len(df_output)
-        completed_reviews = total_reviews - sum(df_output[q_cols].isna().any(axis=1))
+        self.total_reviews = len(df_output)
+        self.completed_reviews = self.total_reviews - sum(df_output[q_cols].isna().any(axis=1))
         self.study_info_label.setText(
             f"Study Name: {self.study_name}\n"
             f"Grader: {self.grader_name}\n"
-            f"Total Requested Reviews: {total_reviews}\n"
-            f"Completed Reviews: {completed_reviews}\n"
+            f"Total Requested Reviews: {self.total_reviews}\n"
+            f"Completed Reviews: {self.completed_reviews}\n"
             f"Questions per Review: {len(self.loaded_metadata['questions'])}\n"
             f"Study Location: {self.current_study_path}"
         )
@@ -153,14 +153,23 @@ class GraderLanding(QWidget):
 
         # Enable buttons based on completion status
         # If not all reviews are completed, enable start grading
-        if completed_reviews != total_reviews:
+        if self.completed_reviews == 0:
             self.start_grading_btn.setEnabled(True)
+            self.start_grading_btn.setText("Begin Grading")
+            self.download_btn.setEnabled(False)
             self.download_btn.setText("Download Unfinished Grades")
-        else:
+        elif self.completed_reviews == self.total_reviews:
             # If all reviews are completed, disable start grading and enable download
             self.start_grading_btn.setEnabled(False)
+            self.start_grading_btn.setText("Begin Grading")
             self.download_btn.setEnabled(True)
             self.download_btn.setText("Download Grades")
+        else:
+            # Reviews are not yet finished, but grading has begun
+            self.start_grading_btn.setEnabled(True)
+            self.start_grading_btn.setText("Continue Grading")
+            self.download_btn.setEnabled(True)
+            self.download_btn.setText("Download Unfinished Grades")
 
     # ---------------- Add New Study from Zip ----------------
     def add_new_study(self):
@@ -175,9 +184,6 @@ class GraderLanding(QWidget):
             folder_path = unique_folder_in_dir(self.grader_studies_dir,folder_name)
             os.makedirs(folder_path)
             for member in zip_ref.namelist():
-                # if member.endswith('/'):
-                #     continue
-                    
                 # Extract just the filename (basename)
                 filename = os.path.basename(member)
                 
@@ -235,7 +241,11 @@ class GraderLanding(QWidget):
     # ---------------- Download Grades ----------------
     def download_grades(self):
         downloads_folder = str(Path.home() / "Downloads")
-        shutil_copy(self.grade_data_path, downloads_folder)
+        if self.completed_reviews != self.total_reviews:
+            unfinished_name = Path(self.grade_data_path).stem + "_UNFINISHED" + Path(self.grade_data_path).suffix
+            shutil_copy(self.grade_data_path, str(Path(downloads_folder) / unfinished_name))
+        else:
+            shutil_copy(self.grade_data_path, downloads_folder)
         QMessageBox.information(self, "Download Complete", f"Grades copied to {downloads_folder}")
         self.load_existing_studies()  # refresh landing page
 
