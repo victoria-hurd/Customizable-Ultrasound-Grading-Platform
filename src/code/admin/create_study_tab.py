@@ -216,10 +216,13 @@ class CreateStudyTab(QWidget):
         # If study is new, create folder
         if self.source_study_path == None:
             self.source_study_path = os.path.join(get_admin_studies_dir(),study_name)
-        print(self.source_study_path)
 
         # Make study folder if it doesn't exist yet
-        os.makedirs(self.source_study_path, exist_ok=True)
+        if not os.path.exists(self.source_study_path):
+            os.makedirs(self.source_study_path, exist_ok=True)
+        else:
+            QMessageBox.warning(self, "Identical Names", "This study name already exists. Please enter a unique study name.")
+            return
 
         # Make empty results folder
         results_folder = os.path.join(self.source_study_path, "Results")
