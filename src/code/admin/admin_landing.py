@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from shutil import rmtree as shutil_rmtree
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QListWidget, 
                              QPushButton, QMessageBox, QHBoxLayout, 
                              QApplication)
@@ -44,14 +46,17 @@ class AdminLanding(QWidget):
         self.create_btn = QPushButton("Create New Study")
         self.edit_btn = QPushButton("Edit Selected Study")
         self.results_btn = QPushButton("Review Results for Selected Study")
+        self.rm_study_btn = QPushButton("Delete Selected Study")
 
         self.create_btn.clicked.connect(self.create_new)
         self.edit_btn.clicked.connect(self.edit_selected)
         self.results_btn.clicked.connect(self.review_results)
+        self.rm_study_btn.clicked.connect(self.delete_study)
 
         btn_layout.addWidget(self.create_btn)
         btn_layout.addWidget(self.edit_btn)
         btn_layout.addWidget(self.results_btn)
+        btn_layout.addWidget(self.rm_study_btn)
 
         layout.addLayout(btn_layout)
 
@@ -105,6 +110,24 @@ class AdminLanding(QWidget):
     def refresh(self):
         self.refresh_studies()
         self.study_list.clearSelection()
+
+    def delete_study(self):
+        selected = self.study_list.currentItem()
+        if not selected:
+            return
+        # Ask if they really do want to remove
+        reply = QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Are you sure you want to delete {selected.text()}? This action cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            dir_to_rm = Path(self.admin_studies_dir) / selected.text()
+            shutil_rmtree(dir_to_rm)
+            self.study_list.clearSelection()
+            self.refresh()
+        return
 
 
 
