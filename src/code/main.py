@@ -1,11 +1,9 @@
 import sys
 import os
-import pathlib
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
-from code.utils.app_paths import ensure_app_directories, get_project_root, get_resource_dir
+from code.utils.app_paths import ensure_app_directories, get_resource_dir
 from code.ui.landing_page import LandingPage
-#from code.resources import get_resource_path
 
 def main():
     APP_RESOURCES_DIR = get_resource_dir()
