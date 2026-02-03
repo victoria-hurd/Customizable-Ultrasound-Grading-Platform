@@ -14,30 +14,30 @@ Before grading can begin, a team member must take the role of "project administr
 
 When you create a new study, that study is stored into this application's App Data. This means that you'll always be able to re-open the application and see all the previous work that you've done.
 
-    1. Consolidate video files into one folder. No other files should be present in this folder. Accepted formats are .mp4 and .avi. Ensure that each video has a unique name.
-    2. Create a grading schema. This is the rubric that you would like your graders to answer for each video. To do this, make a copy of the provided Excel sheet. Input your criteria, where each criterion is a row in the spreadsheet. For each single-select question type, provide at least two answer options for each criterion; up to ten options for each are accepted. Ensure that all criteria are assigned a question type (single-select).
-    3. Open the grading application by double-clicking the Ultrasound_Grader_mac.app (or by running python -m ./src/code/main if you're using a development environment and making edits to the GUI).
-    4. Click "Enter as Admin."
-    5. Click "Create New Study."
-        - Note that there is an example study in the provided distribution
-    6. Enter your study parameters:
-        - Give the study a name
-        - Select the folder in which the videos to be graded are stored. The number of videos that the application will incorporate will be auto-detected based on the number of .mp4 and .avi files within the folder. This will be displayed; check that this number fits with your expectations to make sure that no videos are left ungraded.
-        - Enter the names of your graders (note that the "Grader Summary" will update in real-time). If you have duplicate names, give those with duplicate names a unique identifier.
-        - Select the type of grading paradigm you'd like to employ. The options are to split the number of videos evenly across graders (extra videos (remainder of number of videos/number of graders) will be distributed across the first graders provided) or to have all graders grade all videos. Changing these options will auto-update the "Grader Summary."
-        - You also have the option to have graders repeat seeing each video a set number of times. This is advantageous if you wish to examine the intra-rater reliability of your data. Changing these options will auto-update the "Grader Summary.
-        - Select the grading schema Excel sheet that you created for this study. The questions and options will be automatically parsed into application. Scroll through the questions and verify that the rubric appears as expected.
-    7. Click "Create Study."
-    8. You'll get a success page with the metadata for the study you just created. Read through this and check that everything looks as expected.
-    9. Click "Release to Graders." This will create a .zip file for each grader for the study. This .zip includes the study metadata and the videos that have been randomly assigned to each grader. Note that these videos will be shown to graders in a blinded, deidentified manner. These .zip files will be automatically sent to your downloads folder.
-        - At this point, an optional but recommended step is to go back to the main landing page and click "Enter as Grader," and follow the Annotator/Grader instructions below to test one of the .zip files. Verify that the grading session appears as you'd expect before distributing the grade requests.
-    10. Click "Back to Admin Landing."
-    11. Click "Refresh Data" and ensure that the study you just created now appears in the study list.
-    12. Send each .zip file to their respective grader. They will need to download this application and follow the Annotator/Grader steps provided here.
-        - For smaller research applications, the .zip file will be able to be sent via email or uploaded to shared storage service.
-        - For larger-scale applications with more videos assigned per grader, you may need to use a large file transfer service or transfer the data via physical hard drive. If these are not viable options and the video data is stored online, alternatives include:
-            - Creating multiple studies with identical metadata, but split the master video archive into multiple folders. Graders would have multiple .zips to grade.
-            - Unzipping each graders' release file and send the grader the metadata.json file and the CSV files within their specific .zip. They can then download their assigned video files and re-zip everything on their end.
+1. Consolidate video files into one folder. No other files should be present in this folder. Accepted formats are .mp4 and .avi. Ensure that each video has a unique name.
+2. Create a grading schema. This is the rubric that you would like your graders to answer for each video. To do this, make a copy of the provided Excel sheet. Input your criteria, where each criterion is a row in the spreadsheet. For each single-select question type, provide at least two answer options for each criterion; up to ten options for each are accepted. Ensure that all criteria are assigned a question type (single-select).
+3. Open the grading application by double-clicking the Ultrasound_Grader_mac.app (or by running python -m ./src/code/main if you're using a development environment and making edits to the GUI).
+4. Click "Enter as Admin."
+5. Click "Create New Study."
+    - Note that there is an example study in the provided distribution
+6. Enter your study parameters:
+    - Give the study a name
+    - Select the folder in which the videos to be graded are stored. The number of videos that the application will incorporate will be auto-detected based on the number of .mp4 and .avi files within the folder. This will be displayed; check that this number fits with your expectations to make sure that no videos are left ungraded.
+    - Enter the names of your graders (note that the "Grader Summary" will update in real-time). If you have duplicate names, give those with duplicate names a unique identifier.
+    - Select the type of grading paradigm you'd like to employ. The options are to split the number of videos evenly across graders (extra videos (remainder of number of videos/number of graders) will be distributed across the first graders provided) or to have all graders grade all videos. Changing these options will auto-update the "Grader Summary."
+    - You also have the option to have graders repeat seeing each video a set number of times. This is advantageous if you wish to examine the intra-rater reliability of your data. Changing these options will auto-update the "Grader Summary.
+    - Select the grading schema Excel sheet that you created for this study. The questions and options will be automatically parsed into application. Scroll through the questions and verify that the rubric appears as expected.
+7. Click "Create Study."
+8. You'll get a success page with the metadata for the study you just created. Read through this and check that everything looks as expected.
+9. Click "Release to Graders." This will create a .zip file for each grader for the study. This .zip includes the study metadata and the videos that have been randomly assigned to each grader. Note that these videos will be shown to graders in a blinded, deidentified manner. These .zip files will be automatically sent to your downloads folder.
+    - At this point, an optional but recommended step is to go back to the main landing page and click "Enter as Grader," and follow the Annotator/Grader instructions below to test one of the .zip files. Verify that the grading session appears as you'd expect before distributing the grade requests.
+10. Click "Back to Admin Landing."
+11. Click "Refresh Data" and ensure that the study you just created now appears in the study list.
+12. Send each .zip file to their respective grader. They will need to download this application and follow the Annotator/Grader steps provided here.
+    - For smaller research applications, the .zip file will be able to be sent via email or uploaded to shared storage service.
+    - For larger-scale applications with more videos assigned per grader, you may need to use a large file transfer service or transfer the data via physical hard drive. If these are not viable options and the video data is stored online, alternatives include:
+        - Creating multiple studies with identical metadata, but split the master video archive into multiple folders. Graders would have multiple .zips to grade.
+        - Unzipping each graders' release file and send the grader the metadata.json file and the CSV files within their specific .zip. They can then download their assigned video files and re-zip everything on their end.
 
 Depending on the study/research design, multiple "studies" within the application may need to be created, if for example:
     - Different videos require different grading criteria (ex. the study collected views of Morrison's pouch and PSAX views of the heart)
@@ -51,19 +51,19 @@ You can also edit/duplicate previously-created studies. To do this, select the s
 
 After each grader finishes their grade request, they'll receive a file with their response data in their Downloads folder. They will send this file back to you. After you've begun receiving the final grade CSVs (you don't need to wait until all CSVs have been returned to start this process), you can begin consolidating and examining the grade data.
 
-    1. Open the application.
-    2. Click "Enter as Admin."
-    3. Select the study that you'd like to examine results for.
-    4. Click "Analyze Results for Selected Study."
-    5. This opens the results analysis page. If you haven't yet added any grade files for this study, the page will be blank.
-    6. Click "Add Grader Files."
-    7. Select the grade data files that you've received thus far for this study. These will populate within the file list associated with this study's results. You can always delete any or all of the selected files.
-    8. Note that the metadata for the study, including the grader names assigned to this study, will appear in the top left. This allows you to easily check whether all graders for the study are accounted for within the file list.
-    9. Click "Analyze Data." This can be done regardless of whether or not all graders files are accounted for so that you can analyze results in the interim. The breakdown of grader responses per rubric criterion is shown.
-    10. Click "Download Concatenated Results." This creates a file that contains all grader responses put into one spreadsheet, sent to your Downloads folder. If you did this without all grader data, you'll only have the data from the spreadsheets uploaded to the study review page.
+1. Open the application.
+2. Click "Enter as Admin."
+3. Select the study that you'd like to examine results for.
+4. Click "Analyze Results for Selected Study."
+5. This opens the results analysis page. If you haven't yet added any grade files for this study, the page will be blank.
+6. Click "Add Grader Files."
+7. Select the grade data files that you've received thus far for this study. These will populate within the file list associated with this study's results. You can always delete any or all of the selected files.
+8. Note that the metadata for the study, including the grader names assigned to this study, will appear in the top left. This allows you to easily check whether all graders for the study are accounted for within the file list.
+9. Click "Analyze Data." This can be done regardless of whether or not all graders files are accounted for so that you can analyze results in the interim. The breakdown of grader responses per rubric criterion is shown.
+10. Click "Download Concatenated Results." This creates a file that contains all grader responses put into one spreadsheet, sent to your Downloads folder. If you did this without all grader data, you'll only have the data from the spreadsheets uploaded to the study review page.
 
 If you exit the application and come back at a later time with additional grader spreadsheets to add, you won't need to add the previously-uploaded spreadsheets - these are stored within the application's internal data.
-
+S
 The consolidated results are designed to be used in subsequent statistical analysis. We encourage all researchers to run an inter-rater (and/or intra-rater, if applicable) reliability analysis on their data for all rubric criteria. The exact statistical method used to examine rater agreement depend upon the study parameters (number of graders per video, if all graders graded all items, etc). Methods to consider (not an exhaustive list) include:
 
     1. Simple percent agreement calculations
@@ -84,21 +84,21 @@ The statistical methods used to examine rater agreement should be decided upon b
 
 All annotators/graders will receive a personalized grade request from the project admin. Typically, this will come in the form of a .zip file. You don't need to do anything with this file other than have it somewhere accessible by your system's file explorer, and it can be deleted after uploading to the application (detailed in steps below). Before beginning grading, ensure that the grading application is installed on your machine; if it isn't, follow the steps provided in the Installation Instructions section. To complete the grade request:
 
-    1. Open the application by double-clicking on the .app file.
-    2. Click "Enter as Grader." This takes you to the grader landing page.
-    3. Click "Add New Study from Zip."
-    4. Select the .zip file that you recieved from your project admin. The application will parse the provided data and store the grade request information within its internal data - once finished, you'll receive a success pop-up. At this point, you can safely delete the original .zip file if you'd like.
-    5. Click the study to show the study metadata. This includes the name of the study, your name, the total number of reviews assigned to you, and the number of questions per video you'll need to answer. Note that it will also show you the number of reviews you've completed so far.
-    6. With this study selected, click "Begin Grading." This will take you to the grader instructions page. Read through the instructions before beginning. Of particular note, in the original version of this application, you will not be able to go back once you've assigned a grade to each video. It's also recommended to turn your screen brightness up as a high as possible.
-    7. Click "Start Grading."
-    8. The grading session will now appear. The majority of the space is occupied by the video player. The video controls are shown underneath the player. The questions you'll need to answer for the video is shown on the right (this section is scrollable - you may need to scroll to answer all questions).
-    9. When you're ready, press "Play."
-    10. Answer the questions provided, using the video controls as needed to better inform your responses.
-    11. Click "Save Grades and Advance to Next Video." This will save your responses and take you to your next assigned video. 
-    12. Follow this process until all videos have been reviewed. Note that the progress bar at the bottom of the screen shows the number of reviews completed/remaining.
-    13. You can always exit the grading session and pick up where you left off at a later date. You can test this functionality by reviewing a video, clicking "Save Grades and Advance to Next Video," then clicking "Back to Grader Landing." The metadata for the study you just submitted a grade for should update to show a non-zero number of completed reviews. It should update automatically, but you can always click "Refresh Data" if the completed review isn't showing. Note that the data for each video is only saved once you press the "Save and Advance" button; if you answer the buttons then exit the grader session without clicking "Save and Advance," your responses from that current video won't be saved. Your responses from previous videos WILL be saved.
-    14. Once you complete all requested reviews, you'll be directed to a "Grading Session Complete" page. Here, you can download your grade data as a CSV. You can also download this data anytime from the Grader Landing page.
-    15. Send the final grade data CSV back to your project admin.
+1. Open the application by double-clicking on the .app file.
+2. Click "Enter as Grader." This takes you to the grader landing page.
+3. Click "Add New Study from Zip."
+4. Select the .zip file that you recieved from your project admin. The application will parse the provided data and store the grade request information within its internal data - once finished, you'll receive a success pop-up. At this point, you can safely delete the original .zip file if you'd like.
+5. Click the study to show the study metadata. This includes the name of the study, your name, the total number of reviews assigned to you, and the number of questions per video you'll need to answer. Note that it will also show you the number of reviews you've completed so far.
+6. With this study selected, click "Begin Grading." This will take you to the grader instructions page. Read through the instructions before beginning. Of particular note, in the original version of this application, you will not be able to go back once you've assigned a grade to each video. It's also recommended to turn your screen brightness up as a high as possible.
+7. Click "Start Grading."
+8. The grading session will now appear. The majority of the space is occupied by the video player. The video controls are shown underneath the player. The questions you'll need to answer for the video is shown on the right (this section is scrollable - you may need to scroll to answer all questions).
+9. When you're ready, press "Play."
+10. Answer the questions provided, using the video controls as needed to better inform your responses.
+11. Click "Save Grades and Advance to Next Video." This will save your responses and take you to your next assigned video. 
+12. Follow this process until all videos have been reviewed. Note that the progress bar at the bottom of the screen shows the number of reviews completed/remaining.
+13. You can always exit the grading session and pick up where you left off at a later date. You can test this functionality by reviewing a video, clicking "Save Grades and Advance to Next Video," then clicking "Back to Grader Landing." The metadata for the study you just submitted a grade for should update to show a non-zero number of completed reviews. It should update automatically, but you can always click "Refresh Data" if the completed review isn't showing. Note that the data for each video is only saved once you press the "Save and Advance" button; if you answer the buttons then exit the grader session without clicking "Save and Advance," your responses from that current video won't be saved. Your responses from previous videos WILL be saved.
+14. Once you complete all requested reviews, you'll be directed to a "Grading Session Complete" page. Here, you can download your grade data as a CSV. You can also download this data anytime from the Grader Landing page.
+15. Send the final grade data CSV back to your project admin.
 
 This is not a web-based application - it is an offline application that saves only to your machine. This means that nobody has access to your grade data until you distribute the final grade file as described in steps 14 and 15 above. Importantly, this also means that if your machine were to be lost/stolen/irreparably broken, your grade data will be lost. This would also happen if you were to re-install/uninstall/delete the application - your progress would be lost!
     - If you're completing a larger grade request, you may wish to store copies of your incomplete grade data at a backed-up location. This can be done by clicking "Download Unfinished Grades" on the Grader Landing page, then placing this file wherever is secure.
