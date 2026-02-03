@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
                              QPushButton, QLabel, QListWidget, 
                              QMessageBox, QFileDialog, QApplication)
 
-from shutil import copy as shutil_copy
+from shutil import copy as shutil_copy, rmtree as shutil_rmtree
 from code.utils.app_paths import get_grader_studies_dir
 from code.grader.grading_session import GradingSessionTab
 
@@ -38,7 +38,8 @@ class GraderLanding(QWidget):
         # ---------------- Rest of layout ----------------
         self.grader_studies_dir = str(get_grader_studies_dir())
         self.studies_list = QListWidget()
-        self.studies_list.itemSelectionChanged.connect(self.on_study_selected)
+        #self.studies_list.itemSelectionChanged.connect(self.on_study_selected)
+        self.studies_list.currentItemChanged.connect(self.on_study_selected)
         self.right_panel = QVBoxLayout()
         self.study_info_label = QLabel("Select a study to see details.")
         self.start_grading_btn = QPushButton("Begin Grading")
@@ -56,10 +57,14 @@ class GraderLanding(QWidget):
         # Top-level new study button
         self.new_study_btn = QPushButton("Add New Study from Zip")
         self.new_study_btn.clicked.connect(self.add_new_study)
+        # Top-level remove study button
+        self.rm_study_btn = QPushButton("Delete Selected Study")
+        self.rm_study_btn.clicked.connect(self.delete_study)
 
         left_panel = QVBoxLayout()
         left_panel.addWidget(self.new_study_btn)
         left_panel.addWidget(self.studies_list)
+        left_panel.addWidget(self.rm_study_btn)
 
         self.layout_main.addLayout(left_panel, stretch=1)
         self.layout_main.addLayout(self.right_panel, stretch=2)
@@ -78,10 +83,12 @@ class GraderLanding(QWidget):
     # ---------------- Handle Study Selection ----------------
     def on_study_selected(self):
         selected = self.studies_list.currentItem()
+        print(selected)
         if not selected:
             return
 
         release_name = selected.text()
+        print(release_name)
         self.current_study_path = os.path.join(self.grader_studies_dir, release_name)
 
         # Read study metadata
@@ -169,6 +176,25 @@ class GraderLanding(QWidget):
         self.load_existing_studies()
         QMessageBox.information(self, "Success", f"Successfully loaded grade request {archive_name}")
 
+    # ---------------- Delete Previous Study ----------------
+    def delete_study(self):
+        selected = self.studies_list.currentItem()
+        if not selected:
+            return
+        # Ask if they really do want to remove
+        reply = QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Are you sure you want to delete {selected.text()}? This action cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            dir_to_rm = Path(self.grader_studies_dir) / selected.text()
+            shutil_rmtree(dir_to_rm)
+            self.studies_list.clearSelection()
+            self.refresh()
+        return
+
     # ---------------- Begin Grading ----------------
     def begin_grading(self):
         self.builder = GradingSessionTab(self.loaded_metadata,
@@ -177,6 +203,7 @@ class GraderLanding(QWidget):
                                          parent_window=self)
         self.builder.show()
         self.study_info_label.setText("")
+        self.studies_list.clearSelection()
         self.hide()
 
     # ---------------- Download Grades ----------------
@@ -194,6 +221,8 @@ class GraderLanding(QWidget):
     def refresh(self):
         self.load_existing_studies()
         self.studies_list.clearSelection()
+        self.loaded_metadata = ""
+        self.study_info_label.setText("")
         
 
     

@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QMessageBox, QApplication)
 
 from code.grader.video_player import VideoPlayer
-from code.utils.app_paths import get_project_root,move_without_overwrite
+from code.utils.app_paths import get_project_root,move_without_overwrite,get_resource_dir
 
 class GradingSessionTab(QWidget):
     def __init__(self,
@@ -27,6 +27,8 @@ class GradingSessionTab(QWidget):
         output_dir = os.path.join(self.study_folder, "Output Grade Data")
         self.grade_data_path = os.path.join(output_dir, f"{self.grader_name}_{self.study_name}_grade_data.csv")
         self.grade_df = pd_read_csv(self.grade_data_path)
+        # Convert all columns to string type (object dtype in older pandas versions)
+        self.grade_df = self.grade_df.astype(str)
         self.answers = {}
 
         self._build_ui()
@@ -65,8 +67,8 @@ class GradingSessionTab(QWidget):
 
         # Grader Instructions display
         grader_instruction_label = QLabel("<b>Grader Instructions:</b>\n\n")
-        root = get_project_root()
-        instructions_location = os.path.join(root,"ultrasound_grader","app_resources", "grader_instructions.txt")
+        root = get_resource_dir()
+        instructions_location = os.path.join(root, "grader_instructions.txt")
         with open(instructions_location) as f:
             instructions = f.read()
         instructions_label = QLabel(instructions)
@@ -170,8 +172,8 @@ class GradingSessionTab(QWidget):
 
         # Post-Grading Panel with Instructions and Exit
         end_session_label = QLabel("<b>Grading Session Complete</b>\n\n")
-        root = get_project_root()
-        end_session_instructions_location = os.path.join(root,"ultrasound_grader","app_resources", "session_end_instructions.txt")
+        root = get_resource_dir()
+        end_session_instructions_location = os.path.join(root, "session_end_instructions.txt")
         with open(end_session_instructions_location) as f:
             end_session_instructions = f.read()
         end_session_instructions_label = QLabel(end_session_instructions)
