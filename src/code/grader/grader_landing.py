@@ -175,18 +175,20 @@ class GraderLanding(QWidget):
             folder_path = unique_folder_in_dir(self.grader_studies_dir,folder_name)
             os.makedirs(folder_path)
             for member in zip_ref.namelist():
-                if member.endswith('/'):
-                    continue
+                # if member.endswith('/'):
+                #     continue
                     
                 # Extract just the filename (basename)
                 filename = os.path.basename(member)
                 
-                # Skip if the member is a directory entry
-                if not filename:
-                    continue
-
                 # Define the full path for the extracted file
-                target_path = os.path.join(folder_path, filename)
+                if "Raw Data" in member:
+                    target_path = os.path.join(folder_path, "Raw Data",filename)
+                    os.makedirs(os.path.join(folder_path, "Raw Data"), exist_ok=True)
+                elif not filename: # if is any other directory
+                    continue
+                else: 
+                    target_path = os.path.join(folder_path, filename)
                 source = zip_ref.open(member)
                 target = open(target_path, "wb")
                 try:
