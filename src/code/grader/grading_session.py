@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QMessageBox, QApplication)
 
 from code.grader.video_player import VideoPlayer
-from code.utils.app_paths import get_project_root,move_without_overwrite,get_resource_dir
+from code.utils.app_paths import move_without_overwrite,get_resource_dir
 
 class GradingSessionTab(QWidget):
     def __init__(self,
