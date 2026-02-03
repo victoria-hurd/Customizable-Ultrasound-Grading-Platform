@@ -43,9 +43,6 @@ class VideoPlayer(QWidget):
     def pause(self):
         self.media_player.pause()
 
-    def stop(self):
-        self.media_player.stop()
-
     # ---------------- Slider ----------------
     def set_slider(self, slider: QSlider):
         self.slider = slider
