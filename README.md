@@ -129,7 +129,7 @@ If you want to make edits to the source application code, you can do so by cloni
 
 ## Creating your own distribution
 
-The distribution for this application is created with PyInstaller using the Virtual Environment created in pyvenv.cfg. The distribution is created with the lightweight venv; If you wish to add any additional dependencies to the distribution, use ```pip install [your package]``` from within this environmentYou can activate the virtual environment by running source bin/activate from Customizable-Ultrasound-Grading-Platform. . When you're ready to create your own distribution, follow the steps below:
+The distribution for this application is created with PyInstaller via bash script to activate the virtual environment created in pyvenv.cfg and include desired parameters. The distribution is created with the lightweight venv; If you wish to add any additional dependencies to the distribution, use ```pip install [your package]``` from within this environment. When you're ready to create your own distribution, follow the steps below:
 
 1. Make sure you have the relevant virtual environment folders within Customizable-Ultrasound-Grading-Platform:
     - bin/
