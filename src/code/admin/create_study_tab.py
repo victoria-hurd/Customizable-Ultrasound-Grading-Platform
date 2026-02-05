@@ -13,7 +13,7 @@ from json import dump as json_dump, load as json_load
 from random import shuffle as random_shuffle
 from pandas import read_csv as pd_read_csv, DataFrame as pd_DataFrame
 from code.utils.schema import load_question_schema
-from code.utils.app_paths import get_admin_studies_dir, move_without_overwrite
+from code.utils.app_paths import get_admin_studies_dir, move_without_overwrite, get_resource_dir
 
 # Create the study building tab for admin users
 class CreateStudyTab(QWidget):
@@ -93,10 +93,17 @@ class CreateStudyTab(QWidget):
         # Get questions as parsed by schema.py
         question_box = QGroupBox("Grading Questions")
         question_layout = QVBoxLayout()
+
+        question_btn_layout = QHBoxLayout()
         question_btn = QPushButton("Upload Question Spreadsheet")
         question_btn.clicked.connect(self.load_questions)
+        question_btn_layout.addWidget(question_btn)
+        template_btn = QPushButton("Download Question Spreadsheet Template")
+        template_btn.clicked.connect(self.download_template)
+        question_btn_layout.addWidget(template_btn)
+        question_layout.addLayout(question_btn_layout)
+
         self.question_summary_label = QLabel("No question file loaded")
-        question_layout.addWidget(question_btn)
         question_layout.addWidget(self.question_summary_label)
         self.question_list_layout = QVBoxLayout()
         scroll_widget = QWidget()
@@ -145,6 +152,14 @@ class CreateStudyTab(QWidget):
             self.image_folder_label.setText(folder)
         # Update the grading summary box
         self.update_grading_summary()
+
+    def download_template(self):
+        # Download template gradesheet from app resources to downloads
+        downloads_folder = str(Path.home() / "Downloads")
+        root = get_resource_dir()
+        template_location = os.path.join(root, "GradeSheetTemplate.xlsx")
+        shutil_copy(template_location, downloads_folder)
+        QMessageBox.information(self, "Download Complete", f"Question Spreadsheet Template copied to {downloads_folder}")
 
     def load_questions(self):
         # Open dialog to select question Excel file for schema.py
