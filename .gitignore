@@ -1,2 +1,10 @@
-# Created by venv; see https://docs.python.org/3/library/venv.html
-*
+# Ignoring local files
+.DS_Store
+*.pyc
+# Ignoring virtual environment files
+venv_arm64/
+venv_x86/
+# Ignoring distribution build files
+build/
+dist/
+*.spec
