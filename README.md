@@ -155,6 +155,22 @@ The distribution for this application is created with PyInstaller via bash scrip
     - Give the .dmg a name [we suggest something like "Ultrasound Grader Installer"] and press save - this creates a distributable image
     - If needed you can add a link to applications to DMG. It helps user in installing by drag and drop. Do this from within the terminal on Mac? 
 
+One terminal for build.sh, one terminal within src running command to test
+
+Run ./build.sh to create apps for Apple Silicon (arm64) and Intel processors (x86).
+
+Shell script may need permissions. Simply type chmod +x ./build.sh
+
+Then ./build.sh. For each architecture, this will create virtual environments, download dependencies, create apps with pyinstaller, and add Apple app signatures/remove Apple quarantine flags.
+
+unsealed contents present in the bundle root is fine, it just means we don't have the same structure as typical Apple apps, which is normal for pyinstaller apps
+
+Finally, test the two architectures with ./testing_build.sh
+
+This will open the app twice - once with arm64 and once with x86 on Rosetta. If the app opens twice, then both distributions should work!
+
+
+
 ## Development Information
 
 Application Author: Victoria Hurd
@@ -172,4 +188,6 @@ Development Information:
 Notes:
 
     - only tested for compatibility with MacOS
+    - need to use universal2 python interpreter to ensure compatibility with Intel and Apple Silicon processors
     - distribution created with PyInstaller
+    - dependency versions shown in environment.yml

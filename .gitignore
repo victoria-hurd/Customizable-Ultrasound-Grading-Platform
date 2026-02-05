@@ -1,13 +1,2 @@
-# Ignoring compilation files/mac files/dev env files
-.vscode/
-.DS_Store
-*.pyc
-# Ignoring created output app data during development
-/App Data/*
-src/App Data/*
-# Ignoring created UI Testing folder from development
-/UI Testing/*
-# Ignoring build/distribution files
-src/build/*
-src/dist/*
-src/ultrasound_grader.spec
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*
