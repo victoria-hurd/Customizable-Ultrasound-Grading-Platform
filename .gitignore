@@ -1,6 +1,7 @@
 # Ignoring local files
 .DS_Store
 *.pyc
+*.pptx
 # Ignoring virtual environment files
 venv_arm64/
 venv_x86/
@@ -8,3 +9,6 @@ venv_x86/
 build/
 dist/
 *.spec
+# Ignoring installers
+installers/arm64_installer/
+installers/x86_installer/
