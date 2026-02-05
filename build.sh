@@ -16,9 +16,9 @@ pyinstaller src/code/main.py -D \
 --windowed \
 --clean
 
-codesign --force --deep --sign - Ultrasound_Grader_mac.app
-xattr -dr com.apple.quarantine Ultrasound_Grader_mac.app
-codesign --verify --deep --strict --verbose=2 Ultrasound_Grader_mac.app
+codesign --force --deep --sign - Ultrasound_Grader_arm64.app
+xattr -dr com.apple.quarantine Ultrasound_Grader_arm64.app
+codesign --verify --deep --strict --verbose=2 Ultrasound_Grader_arm64.app
 
 deactivate
 
@@ -37,3 +37,7 @@ arch -x86_64 pyinstaller src/code/main.py -D \
 --clean
 
 deactivate
+
+codesign --force --deep --sign - Ultrasound_Grader_x86.app
+xattr -dr com.apple.quarantine Ultrasound_Grader_x86.app
+codesign --verify --deep --strict --verbose=2 Ultrasound_Grader_x86.app
