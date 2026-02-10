@@ -317,7 +317,7 @@ class GraderLanding(QWidget):
             return
 
         study_name = selected.text()
-        study_path = os.path.join(self.admin_studies_dir, study_name)
+        study_path = os.path.join(get_grader_studies_dir(), study_name)
         try:
             reveal_in_finder(Path(study_path))
         except Exception as e:
