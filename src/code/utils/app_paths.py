@@ -59,29 +59,47 @@ def ensure_app_directories():
     Ensure all writable directories exist.
     Safe to call at startup.
     """
-    if not Path(get_admin_studies_dir()):
-        get_admin_studies_dir().mkdir(parents=True, exist_ok=True)
-        # copy over example study
-        if Path(get_resource_dir / "examples" / "example_admin").isdir():
-            shutil_copyfolder(get_resource_dir / "examples" / "example_admin", 
-                            get_admin_studies_dir() / "Example Study", 
-                            dirs_exist_ok=True)
+    # Base app support directory
+    app_support_dir = get_user_app_support_dir()
+    app_support_dir.mkdir(parents=True, exist_ok=True)
 
-    if not Path(get_grader_studies_dir()):
-        get_grader_studies_dir().mkdir(parents=True, exist_ok=True)
-        # copy over example study
-        if Path(get_resource_dir / "examples" / "example_grader").isdir():
-            shutil_copyfolder(get_resource_dir / "examples" / "example_grader", 
-                            get_grader_studies_dir() / "Example Study", 
-                            dirs_exist_ok=True)
+    # ---------- Resources ----------
+    resources_dir = get_app_support_resources_dir()
+    if not resources_dir.exists():
+        resources_dir.mkdir(parents=True, exist_ok=True)
 
-    if not Path(get_app_support_resources_dir()):
-        get_app_support_resources_dir().mkdir(parents=True, exist_ok=True)
-        # copy over instructions
-        if Path(get_resource_dir / "instructions").isdir():
-            shutil_copyfolder(get_resource_dir / "instructions", 
-                            get_app_support_resources_dir(), 
-                            dirs_exist_ok=True)
+        instructions_src = get_resource_dir() / "instructions"
+        if instructions_src.is_dir():
+            shutil_copyfolder(
+                instructions_src,
+                resources_dir / "Resources",
+                dirs_exist_ok=True
+            )
+    # ---------- Admin Studies ----------
+    admin_dir = get_admin_studies_dir()
+    if not admin_dir.exists():
+        admin_dir.mkdir(parents=True, exist_ok=True)
+
+        example_admin = get_resource_dir() / "examples" / "example_admin"
+        if example_admin.is_dir():
+            shutil_copyfolder(
+                example_admin,
+                admin_dir / "Example Study",
+                dirs_exist_ok=True
+            )
+
+    # ---------- Grader Studies ----------
+    grader_dir = get_grader_studies_dir()
+    if not grader_dir.exists():
+        grader_dir.mkdir(parents=True, exist_ok=True)
+
+        example_grader = get_resource_dir() / "examples" / "example_grader"
+        if example_grader.is_dir():
+            shutil_copyfolder(
+                example_grader,
+                grader_dir / "Example Study",
+                dirs_exist_ok=True
+            )
 
 def reveal_in_finder(path: Path):
     """
