@@ -311,7 +311,7 @@ class GraderLanding(QWidget):
         self.studies_list.clearSelection()
 
     def on_reveal_clicked(self):
-        selected = self.study_list.currentItem()
+        selected = self.studies_list.currentItem()
         if not selected:
             QMessageBox.warning(self, "No Selection", "Please select a study.")
             return

@@ -668,6 +668,16 @@ class CreateStudyTab(QWidget):
             self.parent_window.show()  # show the admin landing page
         self.close()
 
+    def on_reveal_clicked(self):
+        try:
+            reveal_in_finder(Path(self.source_study_path))
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Unable to Reveal Folder",
+                str(e)
+            )
+
 
 class GraderInputWidget(QWidget):
     graders_changed = pyqtSignal()
@@ -830,12 +840,3 @@ class GraderSplitWidget(QWidget):
             )
         }
     
-    def on_reveal_clicked(self):
-        try:
-            reveal_in_finder(Path(self.source_study_path))
-        except Exception as e:
-            QMessageBox.warning(
-                self,
-                "Unable to Reveal Folder",
-                str(e)
-            )
