@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 import sys
+import subprocess
 
 APP_NAME = "Ultrasound Grader"
 
@@ -56,6 +57,20 @@ def ensure_app_directories():
     """
     get_admin_studies_dir().mkdir(parents=True, exist_ok=True)
     get_grader_studies_dir().mkdir(parents=True, exist_ok=True)
+
+def reveal_in_finder(path: Path):
+    """
+    Reveal a file or folder in macOS Finder.
+    """
+    path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"Path does not exist:\n{path}")
+
+    subprocess.run(
+        ["open", "-R", str(path)],
+        check=False
+    )
 
 def move_without_overwrite(source_path, destination_dir, mode='move'):
     source_path = Path(source_path)
