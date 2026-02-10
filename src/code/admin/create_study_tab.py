@@ -444,7 +444,7 @@ class CreateStudyTab(QWidget):
         button_layout.addStretch
         button_layout.addWidget(self.reveal_finder_btn)
         button_layout.addWidget(self.create_release_btn)
-        success_layout.addLayout(self.button_layout)
+        success_layout.addLayout(button_layout)
 
         # Add the frame to the main tab layout
         self.layout().addWidget(success_frame)

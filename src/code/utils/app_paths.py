@@ -153,3 +153,27 @@ def unique_folder_in_dir(destination_dir,source_path):
                 # Found a unique name, return it
                 return new_destination_path
             counter += 1
+
+def delete_all_app_data():
+    """
+    Permanently deletes all user data created by the app.
+    """
+    app_data_dir = get_app_data_dir()
+
+    if app_data_dir.exists():
+        shutil.rmtree(app_data_dir)
+
+def reveal_app_bundle_in_finder():
+    """
+    Reveal the running .app bundle in Finder.
+    """
+    exe_path = Path(sys.executable).resolve()
+
+    # Ultrasound Grader.app/Contents/MacOS/executable
+    app_bundle = exe_path.parents[2]
+
+    if app_bundle.exists():
+        subprocess.run(
+            ["open", "-R", str(app_bundle)],
+            check=False
+        )

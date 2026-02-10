@@ -17,14 +17,17 @@ class LandingPage(QWidget):
         admin_btn = QPushButton("Enter as Admin")
         grader_btn = QPushButton("Enter as Grader")
         exit_btn = QPushButton("Exit Application")
+        uninstall_btn = QPushButton("Uninstall")
 
         admin_btn.clicked.connect(self.open_admin)
         grader_btn.clicked.connect(self.open_grader)
         exit_btn.clicked.connect(QApplication.instance().quit)
+        uninstall_btn.clicked.connect(self.uninstall_app_data)
 
         layout.addWidget(admin_btn)
         layout.addWidget(grader_btn)
         layout.addWidget(exit_btn)
+        layout.addWidget(uninstall_btn)
 
     def open_admin(self):
         self.admin_window = AdminLanding(parent_window=self)
