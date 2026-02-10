@@ -1,0 +1,79 @@
+{
+    "study_name": "Example Study",
+    "data_folder": "/Users/vickihurd/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Ultrasound - Documents/Custom Ultrasound Grading App/UI Testing Materials/Test Videos",
+    "graders": [
+        "John Doe",
+        "Jane Doe"
+    ],
+    "assignment_mode": "all_graders_all_images",
+    "repeat_count": 1,
+    "questions": [
+        {
+            "question_id": 1,
+            "question_text": "Correct probe orientation",
+            "question_type": "Single Select",
+            "options": [
+                "Yes",
+                "No"
+            ]
+        },
+        {
+            "question_id": 2,
+            "question_text": "Heart centering on-screen",
+            "question_type": "Single Select",
+            "options": [
+                "Yes, centered",
+                "No, right-centered",
+                "No, left-centered"
+            ]
+        },
+        {
+            "question_id": 3,
+            "question_text": "Clear view of the left ventricle",
+            "question_type": "Single Select",
+            "options": [
+                "Yes",
+                "No"
+            ]
+        },
+        {
+            "question_id": 4,
+            "question_text": "Clear view of the right ventricle",
+            "question_type": "Single Select",
+            "options": [
+                "Yes",
+                "No"
+            ]
+        },
+        {
+            "question_id": 5,
+            "question_text": "Clear view of the left atrium",
+            "question_type": "Single Select",
+            "options": [
+                "Yes",
+                "No"
+            ]
+        },
+        {
+            "question_id": 6,
+            "question_text": "Clear view of the right atrium",
+            "question_type": "Single Select",
+            "options": [
+                "Yes",
+                "No"
+            ]
+        },
+        {
+            "question_id": 7,
+            "question_text": "Maintenance of the view through 4 cardiac cycles",
+            "question_type": "Single Select",
+            "options": [
+                "Yes, all 4 cycles",
+                "No, 3 cycles",
+                "No, 2 cycles",
+                "No, 1 cycle",
+                "No view"
+            ]
+        }
+    ]
+}
