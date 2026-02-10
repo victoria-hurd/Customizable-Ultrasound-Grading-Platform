@@ -115,28 +115,40 @@ class GraderLanding(QWidget):
             return
 
         # Create output folder for finished grades
-        output_dir = os.path.join(self.current_study_path, "Output Grade Data")
-        os.makedirs(output_dir, exist_ok=True)
-        self.grade_data_path = os.path.join(output_dir, f"{self.grader_name}_{self.study_name}_grade_data.csv")
+        # Try/Except block for filesystem operations
+        try:
+            output_dir = os.path.join(self.current_study_path, "Output Grade Data")
+            os.makedirs(output_dir, exist_ok=True)
+            self.grade_data_path = os.path.join(output_dir, f"{self.grader_name}_{self.study_name}_grade_data.csv")
 
-        # generate question column names
-        q_cols = []
-        for q in self.loaded_metadata['questions']:
-            # Question label
-            q_cols.append(f"{q['question_text']}")
+            # generate question column names
+            q_cols = []
+            for q in self.loaded_metadata['questions']:
+                # Question label
+                q_cols.append(f"{q['question_text']}")
 
-        if not os.path.exists(self.grade_data_path):
-            # Copy initial request CSV to output as working file
-            shutil_copy(grade_request_file, self.grade_data_path)
-            # Add empty columns for each question
-            df_output = pd_read_csv(self.grade_data_path)
-            # Add the new columns with NA values
-            for col_name in q_cols:
-                df_output[col_name] = pd_NA
-            # Rewrite the grade data file with new columns
-            df_output.to_csv(self.grade_data_path, index=False)
-        else:
-            df_output = pd_read_csv(self.grade_data_path)
+            if not os.path.exists(self.grade_data_path):
+                # Copy initial request CSV to output as working file
+                shutil_copy(grade_request_file, self.grade_data_path)
+                # Add empty columns for each question
+                df_output = pd_read_csv(self.grade_data_path)
+                # Add the new columns with NA values
+                for col_name in q_cols:
+                    df_output[col_name] = pd_NA
+                # Rewrite the grade data file with new columns
+                df_output.to_csv(self.grade_data_path, index=False)
+            else:
+                df_output = pd_read_csv(self.grade_data_path)
+        
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Output Grade Data System Operational Failure",
+                f"An error occurred during data update:\n\n{e}"
+            )
+            return
 
         # Count total and completed reviews
         self.total_reviews = len(df_output)
@@ -176,36 +188,48 @@ class GraderLanding(QWidget):
         zip_path, _ = QFileDialog.getOpenFileName(self, "Select Study Zip", filter="Zip Files (*.zip)")
         if not zip_path:
             return
+        
+        # Try/Except block for filesystem operations
+        try:
+            with ZipFile(zip_path, "r") as zip_ref:
+                all_names = zip_ref.namelist()
+                top_dir = all_names[0]
+                folder_name = Path(top_dir).parent
+                folder_path = unique_folder_in_dir(self.grader_studies_dir,folder_name)
+                os.makedirs(folder_path)
+                for member in zip_ref.namelist():
+                    # Extract just the filename (basename)
+                    filename = os.path.basename(member)
+                    
+                    # Define the full path for the extracted file
+                    if "Raw Data" in member:
+                        target_path = os.path.join(folder_path, "Raw Data",filename)
+                        os.makedirs(os.path.join(folder_path, "Raw Data"), exist_ok=True)
+                    elif not filename: # if is any other directory
+                        continue
+                    else: 
+                        target_path = os.path.join(folder_path, filename)
+                    source = zip_ref.open(member)
+                    target = open(target_path, "wb")
+                    try:
+                        shutil_copyfileobj(source, target)
+                    finally:
+                        source.close()
+                        target.close()
 
-        with ZipFile(zip_path, "r") as zip_ref:
-            all_names = zip_ref.namelist()
-            top_dir = all_names[0]
-            folder_name = Path(top_dir).parent
-            folder_path = unique_folder_in_dir(self.grader_studies_dir,folder_name)
-            os.makedirs(folder_path)
-            for member in zip_ref.namelist():
-                # Extract just the filename (basename)
-                filename = os.path.basename(member)
-                
-                # Define the full path for the extracted file
-                if "Raw Data" in member:
-                    target_path = os.path.join(folder_path, "Raw Data",filename)
-                    os.makedirs(os.path.join(folder_path, "Raw Data"), exist_ok=True)
-                elif not filename: # if is any other directory
-                    continue
-                else: 
-                    target_path = os.path.join(folder_path, filename)
-                source = zip_ref.open(member)
-                target = open(target_path, "wb")
-                try:
-                    shutil_copyfileobj(source, target)
-                finally:
-                    source.close()
-                    target.close()
+            self.load_existing_studies()
+            self.studies_list.clearSelection()
+            QMessageBox.information(self, "Success", f"Successfully loaded grade request {folder_path.stem}")
 
-        self.load_existing_studies()
-        self.studies_list.clearSelection()
-        QMessageBox.information(self, "Success", f"Successfully loaded grade request {folder_path.stem}")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Load Grade Request Failed",
+                f"An error occurred during loading grade request:\n\n{e}"
+            )
+            return
 
     # ---------------- Delete Previous Study ----------------
     def delete_study(self):
@@ -219,13 +243,26 @@ class GraderLanding(QWidget):
             f"Are you sure you want to delete {selected.text()}? This action cannot be undone.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
-        if reply == QMessageBox.StandardButton.Yes:
-            dir_to_rm = Path(self.grader_studies_dir) / selected.text()
-            shutil_rmtree(dir_to_rm)
-            self.studies_list.clearSelection()
-            self.study_info_label.setText("Select a study to see details.")
-            self.refresh()
-        return
+        # Try/Except block for filesystem operations
+        try:
+            if reply == QMessageBox.StandardButton.Yes:
+                dir_to_rm = Path(self.grader_studies_dir) / selected.text()
+                shutil_rmtree(dir_to_rm)
+                self.studies_list.clearSelection()
+                self.study_info_label.setText("Select a study to see details.")
+                self.refresh()
+            return
+        
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Delete Grade Request Failed",
+                f"An error occurred during delete grade request:\n\n{e}"
+            )
+            return
+    
 
     # ---------------- Begin Grading ----------------
     def begin_grading(self):
@@ -240,14 +277,25 @@ class GraderLanding(QWidget):
 
     # ---------------- Download Grades ----------------
     def download_grades(self):
-        downloads_folder = str(Path.home() / "Downloads")
-        if self.completed_reviews != self.total_reviews:
-            unfinished_name = Path(self.grade_data_path).stem + "_UNFINISHED" + Path(self.grade_data_path).suffix
-            shutil_copy(self.grade_data_path, str(Path(downloads_folder) / unfinished_name))
-        else:
-            shutil_copy(self.grade_data_path, downloads_folder)
-        QMessageBox.information(self, "Download Complete", f"Grades copied to {downloads_folder}")
-        self.load_existing_studies()  # refresh landing page
+        # Try/Except block for filesystem operations
+        try:  
+            downloads_folder = str(Path.home() / "Downloads")
+            if self.completed_reviews != self.total_reviews:
+                unfinished_name = Path(self.grade_data_path).stem + "_UNFINISHED" + Path(self.grade_data_path).suffix
+                shutil_copy(self.grade_data_path, str(Path(downloads_folder) / unfinished_name))
+            else:
+                shutil_copy(self.grade_data_path, downloads_folder)
+            QMessageBox.information(self, "Download Complete", f"Grades copied to {downloads_folder}")
+            self.load_existing_studies()  # refresh landing page
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Download Grade Data Failed",
+                f"An error occurred while saving grade data to downloads:\n\n{e}"
+            )
+            return
 
     def go_back_to_main(self):
         if self.parent_window:

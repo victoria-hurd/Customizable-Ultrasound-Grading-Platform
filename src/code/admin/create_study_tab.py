@@ -228,79 +228,90 @@ class CreateStudyTab(QWidget):
             QMessageBox.warning(self, "No Files", "No valid image/video files found in folder.")
             return
 
-        # If study is new, create folder
-        if self.source_study_path == None:
-            self.source_study_path = os.path.join(get_admin_studies_dir(),study_name)
+        # Try/Except block for filesystem operations
+        try:
+            # If study is new, create folder
+            if self.source_study_path == None:
+                self.source_study_path = os.path.join(get_admin_studies_dir(),study_name)
 
-        # Make study folder if it doesn't exist yet
-        if not os.path.exists(self.source_study_path):
-            os.makedirs(self.source_study_path, exist_ok=True)
-        else:
-            QMessageBox.warning(self, "Identical Names", "This study name already exists. Please enter a unique study name.")
-            return
+            # Make study folder if it doesn't exist yet
+            if not os.path.exists(self.source_study_path):
+                os.makedirs(self.source_study_path, exist_ok=True)
+            else:
+                QMessageBox.warning(self, "Identical Names", "This study name already exists. Please enter a unique study name.")
+                return
 
-        # Make empty results folder
-        results_folder = os.path.join(self.source_study_path, "Results")
-        os.makedirs(results_folder, exist_ok=True)
+            # Make empty results folder
+            results_folder = os.path.join(self.source_study_path, "Results")
+            os.makedirs(results_folder, exist_ok=True)
 
-        # OUTPUT 1: All Grader Requests Master CSV
-        all_requests_csv_path = os.path.join(self.source_study_path, f"all_grader_requests_{study_name}.csv")
+            # OUTPUT 1: All Grader Requests Master CSV
+            all_requests_csv_path = os.path.join(self.source_study_path, f"all_grader_requests_{study_name}.csv")
 
-        assignments = []
-        deid_counter = 1
+            assignments = []
+            deid_counter = 1
 
-        if assignment["mode"] == "all_graders_all_images":
-            # Each grader gets all files
-            for f in media_files:
+            if assignment["mode"] == "all_graders_all_images":
+                # Each grader gets all files
+                for f in media_files:
+                        deid_name = f"MEDIA_{deid_counter:04d}{os.path.splitext(f)[1]}"
+                        for grader in graders:
+                            # Repeat files if repeat_count > 1
+                            for i in range(repeat_count):
+                                assignments.append({
+                                    "original_filename": f,
+                                    "deidentified_filename": deid_name,
+                                    "assigned_grader": grader,
+                                    "repeat_num": i+1
+                                })
+                        deid_counter += 1
+
+            else:
+                # Split evenly among graders
+                random_shuffle(media_files)
+                num_graders = len(graders)
+                for idx, f in enumerate(media_files):
+                    grader = graders[idx % num_graders]
                     deid_name = f"MEDIA_{deid_counter:04d}{os.path.splitext(f)[1]}"
-                    for grader in graders:
-                        # Repeat files if repeat_count > 1
-                        for i in range(repeat_count):
-                            assignments.append({
-                                "original_filename": f,
-                                "deidentified_filename": deid_name,
-                                "assigned_grader": grader,
-                                "repeat_num": i+1
-                            })
+                    # Repeat files if repeat_count > 1
+                    for i in range(repeat_count):
+                        assignments.append({
+                            "original_filename": f,
+                            "deidentified_filename": deid_name,
+                            "assigned_grader": grader,
+                            "repeat_num": i+1
+                        })
                     deid_counter += 1
 
-        else:
-            # Split evenly among graders
-            random_shuffle(media_files)
-            num_graders = len(graders)
-            for idx, f in enumerate(media_files):
-                grader = graders[idx % num_graders]
-                deid_name = f"MEDIA_{deid_counter:04d}{os.path.splitext(f)[1]}"
-                # Repeat files if repeat_count > 1
-                for i in range(repeat_count):
-                    assignments.append({
-                        "original_filename": f,
-                        "deidentified_filename": deid_name,
-                        "assigned_grader": grader,
-                        "repeat_num": i+1
-                    })
-                deid_counter += 1
+            df = pd_DataFrame(assignments)
+            df.to_csv(all_requests_csv_path, index=False)
 
-        df = pd_DataFrame(assignments)
-        df.to_csv(all_requests_csv_path, index=False)
+            self.review_type = "nominal"
 
-        self.review_type = "nominal"
+            # OUTPUT 2: Study Metadata
+            study_metadata = {
+                "study_name": study_name,
+                "data_folder": data_folder,
+                "graders": graders,
+                "assignment_mode": assignment["mode"],
+                "repeat_count": repeat_count,
+                "questions": questions
+            }
+            metadata_path = os.path.join(self.source_study_path, "study_metadata.json")
+            with open(metadata_path, "w") as f:
+                json_dump(study_metadata, f, indent=4)
 
-        # OUTPUT 2: Study Metadata
-        study_metadata = {
-            "study_name": study_name,
-            "data_folder": data_folder,
-            "graders": graders,
-            "assignment_mode": assignment["mode"],
-            "repeat_count": repeat_count,
-            "questions": questions
-        }
-        metadata_path = os.path.join(self.source_study_path, "study_metadata.json")
-        with open(metadata_path, "w") as f:
-            json_dump(study_metadata, f, indent=4)
-
-        # Show success panel with summary, study folder, and grader releases button
-        self.show_study_success(study_name, self.source_study_path, data_folder, graders, assignment, repeat_count, len(media_files),)
+            # Show success panel with summary, study folder, and grader releases button
+            self.show_study_success(study_name, self.source_study_path, data_folder, graders, assignment, repeat_count, len(media_files),)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Study Creation Failed",
+                f"An error occurred during study creation:\n\n{e}"
+            )
+            return
 
     def _count_media_files(self):
         folder = self.image_folder_label.text()
@@ -444,66 +455,78 @@ class CreateStudyTab(QWidget):
         df = pd_read_csv(requests_csv)
 
         # Create grader releases root folder
-        releases_folder = os.path.join(self.current_study_folder, "Grader Releases")
-        os.makedirs(releases_folder, exist_ok=True)
+        # Try/Except block for filesystem operations
+        try:
+            releases_folder = os.path.join(self.current_study_folder, "Grader Releases")
+            os.makedirs(releases_folder, exist_ok=True)
 
-        graders = df["assigned_grader"].unique()
+            graders = df["assigned_grader"].unique()
 
-        # Progress bar
-        progress = QProgressBar()
-        progress.setMaximum(len(graders))
-        self.layout().addWidget(progress)
-        dest_paths_list = []
+            # Progress bar
+            progress = QProgressBar()
+            progress.setMaximum(len(graders))
+            self.layout().addWidget(progress)
+            dest_paths_list = []
 
-        for i, grader in enumerate(graders, start=1):
-            grader_folder = os.path.join(releases_folder, f"{grader}_{study_name}")
-            raw_folder = os.path.join(grader_folder, "Raw Data")
-            os.makedirs(raw_folder, exist_ok=True)
+            for i, grader in enumerate(graders, start=1):
+                grader_folder = os.path.join(releases_folder, f"{grader}_{study_name}")
+                raw_folder = os.path.join(grader_folder, "Raw Data")
+                os.makedirs(raw_folder, exist_ok=True)
 
-            grader_df = df[df["assigned_grader"] == grader].copy()
+                grader_df = df[df["assigned_grader"] == grader].copy()
 
-            # Copy assigned files with de-identified names
-            for _, row in grader_df.iterrows():
-                src_file = os.path.join(self.image_folder_label.text(), row["original_filename"])
-                dest_file = os.path.join(raw_folder, row["deidentified_filename"])
-                if os.path.exists(src_file):
-                    shutil_copy(src_file, dest_file)
+                # Copy assigned files with de-identified names
+                for _, row in grader_df.iterrows():
+                    src_file = os.path.join(self.image_folder_label.text(), row["original_filename"])
+                    dest_file = os.path.join(raw_folder, row["deidentified_filename"])
+                    if os.path.exists(src_file):
+                        shutil_copy(src_file, dest_file)
+                    else:
+                        print(f"Warning: source file not found: {src_file}")
+
+                # Create per-grader master CSV
+                grader_df = grader_df.drop(columns=["original_filename"]).copy()
+                grader_df["review_type"] = self.review_type
+                grader_csv_path = os.path.join(
+                    grader_folder,
+                    f"{grader}_{study_name}_grade_request.csv"
+                )
+
+                grader_df.to_csv(grader_csv_path, index=False)
+
+                # Copy over the metadata file
+                metadata_file = os.path.join(self.current_study_folder, "study_metadata.json")
+                if os.path.exists(metadata_file):
+                    shutil_copy(metadata_file, os.path.join(grader_folder, "study_metadata.json"))
                 else:
-                    print(f"Warning: source file not found: {src_file}")
+                    print(f"Warning: source file not found: {metadata_file}")
+                # Zip the grader folder
+                zip_path = os.path.join(releases_folder, f"{grader}_{study_name}_release.zip")
+                with ZipFile(zip_path, 'w') as zipf:
+                    for root, _, files in os.walk(grader_folder):
+                        for file in files:
+                            abs_path = os.path.join(root, file)
+                            arcname = os.path.relpath(abs_path, start=releases_folder)
+                            zipf.write(abs_path, arcname)
+                # Move .zips to downloads folder
+                downloads_folder = os.path.join(Path.home(),"Downloads")
+                dest_path = move_without_overwrite(zip_path, downloads_folder)
+                dest_paths_list.append(dest_path)
+                # Update progress bar
+                progress.setValue(i)
 
-            # Create per-grader master CSV
-            grader_df = grader_df.drop(columns=["original_filename"]).copy()
-            grader_df["review_type"] = self.review_type
-            grader_csv_path = os.path.join(
-                grader_folder,
-                f"{grader}_{study_name}_grade_request.csv"
+            # Show success panel 
+            self.show_release_success(study_name, dest_paths_list, graders)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Grader Release Creation Failed",
+                f"An error occurred during grader release creation:\n\n{e}"
             )
-
-            grader_df.to_csv(grader_csv_path, index=False)
-
-            # Copy over the metadata file
-            metadata_file = os.path.join(self.current_study_folder, "study_metadata.json")
-            if os.path.exists(metadata_file):
-                shutil_copy(metadata_file, os.path.join(grader_folder, "study_metadata.json"))
-            else:
-                print(f"Warning: source file not found: {metadata_file}")
-            # Zip the grader folder
-            zip_path = os.path.join(releases_folder, f"{grader}_{study_name}_release.zip")
-            with ZipFile(zip_path, 'w') as zipf:
-                for root, _, files in os.walk(grader_folder):
-                    for file in files:
-                        abs_path = os.path.join(root, file)
-                        arcname = os.path.relpath(abs_path, start=releases_folder)
-                        zipf.write(abs_path, arcname)
-            # Move .zips to downloads folder
-            downloads_folder = os.path.join(Path.home(),"Downloads")
-            dest_path = move_without_overwrite(zip_path, downloads_folder)
-            dest_paths_list.append(dest_path)
-            # Update progress bar
-            progress.setValue(i)
-
-        # Show success panel 
-        self.show_release_success(study_name, dest_paths_list, graders)
+            return
 
     def show_release_success(self, study_name, zip_location, graders):
         # Hide all existing widgets in the tab (inputs, labels, etc.)

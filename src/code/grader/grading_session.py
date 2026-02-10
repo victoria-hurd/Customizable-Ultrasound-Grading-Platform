@@ -284,8 +284,18 @@ class GradingSessionTab(QWidget):
             # Write directly into the existing column
             self.grade_df.at[row_index, q_id] = str(selected.text())
 
-        # Persist immediately
-        self.grade_df.to_csv(self.grade_data_path, index=False)
+        # Try/Except block for filesystem operations
+        try:
+            self.grade_df.to_csv(self.grade_data_path, index=False)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Grade Data Save Failed",
+                f"An error occurred during graded data save:\n\n{e}"
+            )
+            return
 
         # Advance
         self.current_index += 1

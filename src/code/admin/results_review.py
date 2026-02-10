@@ -204,12 +204,24 @@ class GraderFileWidget(QWidget):
         if not files:
             return
 
-        # Copy selected files into Grader Files folder
-        for f in files:
-            dest = os.path.join(self.grader_dir, os.path.basename(f))
-            shutil_copy(f, dest)
+        # Try/Except block for filesystem operations
+        try:
+            # Copy selected files into Grader Files folder
+            for f in files:
+                dest = os.path.join(self.grader_dir, os.path.basename(f))
+                shutil_copy(f, dest)
 
-        self.populate_file_list()
+            self.populate_file_list()
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Add Grade Data Failed",
+                f"An error occurred during add grade data:\n\n{e}"
+            )
+            return
     
     def delete_selected_file(self):
         selected_items = self.file_list.selectedItems()
@@ -226,9 +238,20 @@ class GraderFileWidget(QWidget):
         if confirm != QMessageBox.StandardButton.Yes:
             return
 
-        for item in selected_items:
-            fname = item.text()
-            path = os.path.join(self.grader_dir, fname)
-            if os.path.exists(path):
-                os.remove(path)
-            self.file_list.takeItem(self.file_list.row(item))
+        # Try/Except block for filesystem operations
+        try:
+            for item in selected_items:
+                fname = item.text()
+                path = os.path.join(self.grader_dir, fname)
+                if os.path.exists(path):
+                    os.remove(path)
+                self.file_list.takeItem(self.file_list.row(item))
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Delete Grade Data Failed",
+                f"An error occurred during delete grade data:\n\n{e}"
+            )
+            return
