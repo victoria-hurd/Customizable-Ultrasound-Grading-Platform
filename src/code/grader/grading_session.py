@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QMessageBox, QApplication)
 
 from code.grader.video_player import VideoPlayer
-from code.utils.app_paths import move_without_overwrite,get_resource_dir
+from code.utils.app_paths import move_without_overwrite,get_app_support_resources_dir
 
 class GradingSessionTab(QWidget):
     def __init__(self,
@@ -67,7 +67,7 @@ class GradingSessionTab(QWidget):
 
         # Grader Instructions display
         grader_instruction_label = QLabel("<b>Grader Instructions:</b>\n\n")
-        root = get_resource_dir()
+        root = get_app_support_resources_dir()
         instructions_location = os.path.join(root, "grader_instructions.txt")
         with open(instructions_location) as f:
             instructions = f.read()
@@ -172,7 +172,7 @@ class GradingSessionTab(QWidget):
 
         # Post-Grading Panel with Instructions and Exit
         end_session_label = QLabel("<b>Grading Session Complete</b>\n\n")
-        root = get_resource_dir()
+        root = get_app_support_resources_dir()
         end_session_instructions_location = os.path.join(root, "session_end_instructions.txt")
         with open(end_session_instructions_location) as f:
             end_session_instructions = f.read()

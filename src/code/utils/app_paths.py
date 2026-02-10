@@ -2,6 +2,7 @@ from pathlib import Path
 import shutil
 import sys
 import subprocess
+from shutil import copytree as shutil_copyfolder
 
 APP_NAME = "Ultrasound Grader"
 
@@ -50,13 +51,34 @@ def get_admin_studies_dir():
 def get_grader_studies_dir():
     return get_app_data_dir() / "Grader Studies"
 
+def get_app_support_resources_dir():
+    return get_app_data_dir() / "Resources"
+
 def ensure_app_directories():
     """
     Ensure all writable directories exist.
     Safe to call at startup.
     """
-    get_admin_studies_dir().mkdir(parents=True, exist_ok=True)
-    get_grader_studies_dir().mkdir(parents=True, exist_ok=True)
+    if not Path(get_admin_studies_dir()):
+        get_admin_studies_dir().mkdir(parents=True, exist_ok=True)
+        # copy over example study
+        shutil_copyfolder(get_resource_dir / "examples" / "example_admin", 
+                          get_admin_studies_dir() / "Example Study", 
+                          dirs_exist_ok=True)
+
+    if not Path(get_grader_studies_dir()):
+        get_grader_studies_dir().mkdir(parents=True, exist_ok=True)
+        # copy over example study
+        shutil_copyfolder(get_resource_dir / "examples" / "example_grader", 
+                          get_grader_studies_dir() / "Example Study", 
+                          dirs_exist_ok=True)
+
+    if not Path(get_app_support_resources_dir()):
+        get_app_support_resources_dir().mkdir(parents=True, exist_ok=True)
+        # copy over instructions
+        shutil_copyfolder(get_resource_dir / "instructions", 
+                          get_app_support_resources_dir(), 
+                          dirs_exist_ok=True)
 
 def reveal_in_finder(path: Path):
     """
