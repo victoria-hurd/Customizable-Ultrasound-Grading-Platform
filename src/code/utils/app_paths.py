@@ -2,32 +2,58 @@ from pathlib import Path
 import shutil
 import sys
 
+APP_NAME = "Ultrasound Grader"
+
+# ---------- CORE PATHS ----------
 def get_project_root():
     """
-    relative_path = "app_resources/xyz.jpg"
-    relative_path = pathlib.Path("app_resources") / "XYZ.jpg"
-    relative_path = os.path.join("app_resources","xyz.jpg")
+    Returns the base path for bundled resources.
+    Works in dev and PyInstaller.
     """
     dev_base_path = Path(__file__).resolve().parent.parent
-    base_path = getattr(sys, "_MEIPASS", dev_base_path)
+    return Path(getattr(sys, "_MEIPASS", dev_base_path))
 
-    return Path(base_path)
 
 def get_resource_dir():
-    base_path = get_project_root()
-    app_resource_dir = base_path / "app_resources"
-    return app_resource_dir
+    """
+    Read-only resources bundled with the app.
+    """
+    return get_project_root() / "app_resources"
+
+
+# ---------- USER DATA (WRITABLE) ----------
+def get_user_app_support_dir():
+    """
+    macOS-native writable app data directory:
+    ~/Library/Application Support/Ultrasound Grader
+    """
+    return (
+        Path.home()
+        / "Library"
+        / "Application Support"
+        / APP_NAME
+    )
+
 
 def get_app_data_dir():
-    return get_project_root().parent.parent / "App Data"
+    """
+    Alias for clarity / backward compatibility.
+    """
+    return get_user_app_support_dir()
+
 
 def get_admin_studies_dir():
     return get_app_data_dir() / "Admin Studies"
+
 
 def get_grader_studies_dir():
     return get_app_data_dir() / "Grader Studies"
 
 def ensure_app_directories():
+    """
+    Ensure all writable directories exist.
+    Safe to call at startup.
+    """
     get_admin_studies_dir().mkdir(parents=True, exist_ok=True)
     get_grader_studies_dir().mkdir(parents=True, exist_ok=True)
 
