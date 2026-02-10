@@ -1,0 +1,5 @@
+original_filename,deidentified_filename,assigned_grader,repeat_num
+exampleVideo2.mp4,MEDIA_0001.mp4,John Doe,1
+exampleVideo2.mp4,MEDIA_0001.mp4,Jane Doe,1
+exampleVideo1.avi,MEDIA_0002.avi,John Doe,1
+exampleVideo1.avi,MEDIA_0002.avi,Jane Doe,1
