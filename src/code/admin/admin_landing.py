@@ -4,7 +4,7 @@ from shutil import rmtree as shutil_rmtree
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QListWidget, 
                              QPushButton, QMessageBox, QHBoxLayout, 
                              QApplication)
-from code.utils.app_paths import get_admin_studies_dir
+from code.utils.app_paths import get_admin_studies_dir, reveal_in_finder
 from code.admin.create_study_tab import CreateStudyTab
 from code.admin.results_review import ReviewResultsWindow
 
@@ -46,16 +46,19 @@ class AdminLanding(QWidget):
         self.create_btn = QPushButton("Create New Study")
         self.edit_btn = QPushButton("Edit Selected Study")
         self.results_btn = QPushButton("Review Results for Selected Study")
+        self.show_finder_btn = QPushButton("Show Stored Data in Finder for Selected Study")
         self.rm_study_btn = QPushButton("Delete Selected Study")
 
         self.create_btn.clicked.connect(self.create_new)
         self.edit_btn.clicked.connect(self.edit_selected)
         self.results_btn.clicked.connect(self.review_results)
+        self.show_finder_btn.clicked.connect(self.on_reveal_clicked)
         self.rm_study_btn.clicked.connect(self.delete_study)
 
         btn_layout.addWidget(self.create_btn)
         btn_layout.addWidget(self.edit_btn)
         btn_layout.addWidget(self.results_btn)
+        btn_layout.addWidget(self.show_finder_btn)
         btn_layout.addWidget(self.rm_study_btn)
 
         layout.addLayout(btn_layout)
@@ -128,7 +131,23 @@ class AdminLanding(QWidget):
             self.study_list.clearSelection()
             self.refresh()
         return
+    
+    def on_reveal_clicked(self):
+        selected = self.study_list.currentItem()
+        if not selected:
+            QMessageBox.warning(self, "No Selection", "Please select a study.")
+            return
 
+        study_name = selected.text()
+        study_path = os.path.join(self.admin_studies_dir, study_name)
+        try:
+            reveal_in_finder(Path(study_path))
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Unable to Reveal Folder",
+                str(e)
+            )
 
 
 

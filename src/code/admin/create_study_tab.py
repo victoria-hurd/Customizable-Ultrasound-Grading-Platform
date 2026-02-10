@@ -13,7 +13,7 @@ from json import dump as json_dump, load as json_load
 from random import shuffle as random_shuffle
 from pandas import read_csv as pd_read_csv, DataFrame as pd_DataFrame
 from code.utils.schema import load_question_schema
-from code.utils.app_paths import get_admin_studies_dir, move_without_overwrite, get_resource_dir
+from code.utils.app_paths import get_admin_studies_dir, move_without_overwrite, get_resource_dir, reveal_in_finder
 
 # Create the study building tab for admin users
 class CreateStudyTab(QWidget):
@@ -438,12 +438,21 @@ class CreateStudyTab(QWidget):
         self.current_study_folder = study_folder
         self.create_release_btn = QPushButton("Create Grader Release Folders")
         self.create_release_btn.clicked.connect(self.create_grader_release_folders)
-        success_layout.addWidget(self.create_release_btn)
+        self.reveal_finder_btn = QPushButton("Show Study Data in Finder")
+        self.reveal_finder_btn.clicked.connect(self.on_reveal_clicked)
+        button_layout = QHBoxLayout()
+        button_layout.addStretch
+        button_layout.addWidget(self.reveal_finder_btn)
+        button_layout.addWidget(self.create_release_btn)
+        success_layout.addLayout(self.button_layout)
 
         # Add the frame to the main tab layout
         self.layout().addWidget(success_frame)
 
     def create_grader_release_folders(self):
+        # Change button status
+        self.create_release_btn.setEnabled(False)
+        self.create_release_btn.setText("Creating Grader Releases...")
         # Master study CSV
         study_name = self.study_name_input.text().strip()
         requests_csv = os.path.join(self.current_study_folder, f"all_grader_requests_{study_name}.csv")
@@ -519,6 +528,9 @@ class CreateStudyTab(QWidget):
             self.show_release_success(study_name, dest_paths_list, graders)
 
         except Exception as e:
+            # Change button status
+            self.create_release_btn.setEnabled(True)
+            self.create_release_btn.setText("Create Grader Release Folders")
             import traceback
             traceback.print_exc()
             QMessageBox.critical(
@@ -817,3 +829,13 @@ class GraderSplitWidget(QWidget):
                 else 1
             )
         }
+    
+    def on_reveal_clicked(self):
+        try:
+            reveal_in_finder(Path(self.source_study_path))
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Unable to Reveal Folder",
+                str(e)
+            )

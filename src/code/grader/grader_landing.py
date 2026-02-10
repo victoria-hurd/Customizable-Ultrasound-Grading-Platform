@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
                              QMessageBox, QFileDialog, QApplication)
 
 from shutil import copy as shutil_copy, rmtree as shutil_rmtree, copyfileobj as shutil_copyfileobj
-from code.utils.app_paths import get_grader_studies_dir,unique_folder_in_dir
+from code.utils.app_paths import get_grader_studies_dir,unique_folder_in_dir,reveal_in_finder
 from code.grader.grading_session import GradingSessionTab
 
 class GraderLanding(QWidget):
@@ -61,10 +61,14 @@ class GraderLanding(QWidget):
         # Top-level remove study button
         self.rm_study_btn = QPushButton("Delete Selected Study")
         self.rm_study_btn.clicked.connect(self.delete_study)
+        # Show in Finder
+        self.show_finder_btn = QPushButton("Show Stored Data in Finder")
+        self.show_finder_btn.clicked.connect(self.on_reveal_clicked)
 
         left_panel = QVBoxLayout()
         left_panel.addWidget(self.new_study_btn)
         left_panel.addWidget(self.studies_list)
+        left_panel.addWidget(self.show_finder_btn)
         left_panel.addWidget(self.rm_study_btn)
 
         self.layout_main.addLayout(left_panel, stretch=1)
@@ -305,6 +309,23 @@ class GraderLanding(QWidget):
     def refresh(self):
         self.load_existing_studies()
         self.studies_list.clearSelection()
+
+    def on_reveal_clicked(self):
+        selected = self.study_list.currentItem()
+        if not selected:
+            QMessageBox.warning(self, "No Selection", "Please select a study.")
+            return
+
+        study_name = selected.text()
+        study_path = os.path.join(self.admin_studies_dir, study_name)
+        try:
+            reveal_in_finder(Path(study_path))
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Unable to Reveal Folder",
+                str(e)
+            )
         
         
 
