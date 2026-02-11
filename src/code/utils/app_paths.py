@@ -2,7 +2,7 @@ from pathlib import Path
 import shutil
 import sys
 import subprocess
-from shutil import copytree as shutil_copyfolder
+from shutil import copytree as shutil_copyfolder, copy as shutil_copyfile
 
 APP_NAME = "Ultrasound Grader"
 
@@ -67,6 +67,11 @@ def ensure_app_directories():
     resources_dir = get_app_support_resources_dir()
     if not resources_dir.exists():
         resources_dir.mkdir(parents=True, exist_ok=True)
+
+        shutil_copyfile(
+            get_resource_dir() / "README.txt",
+            resources_dir / "README.txt"
+        )
 
         instructions_src = get_resource_dir() / "instructions"
         if instructions_src.is_dir():
