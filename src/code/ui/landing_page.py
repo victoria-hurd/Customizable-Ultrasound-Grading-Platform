@@ -1,7 +1,8 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QApplication, QMessageBox
+import os
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QApplication, QMessageBox
 from code.admin.admin_landing import AdminLanding
 from code.grader.grader_landing import GraderLanding
-from code.utils.app_paths import delete_all_app_data, reveal_app_bundle_in_finder
+from code.utils.app_paths import delete_all_app_data, reveal_app_bundle_in_finder, get_app_support_resources_dir
 
 class LandingPage(QWidget):
     def __init__(self):
@@ -10,24 +11,41 @@ class LandingPage(QWidget):
 
         layout = QVBoxLayout(self)
 
+        # Top bar for exit button
+        exit_bar = QHBoxLayout()
+        exit_btn = QPushButton("Exit")
+        exit_bar.addStretch(5)
+        exit_btn.clicked.connect(QApplication.instance().quit)
+        exit_bar.addWidget(exit_btn)
+        layout.addLayout(exit_bar)
+
+        # Title and welcome screen
         title = QLabel("Welcome to  Ultrasound Grader!")
         title.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(title)
 
+        # Main functions
+        layout.addStretch(1)
         admin_btn = QPushButton("Enter as Admin")
         grader_btn = QPushButton("Enter as Grader")
-        exit_btn = QPushButton("Exit Application")
-        uninstall_btn = QPushButton("Uninstall")
-
-        admin_btn.clicked.connect(self.open_admin)
-        grader_btn.clicked.connect(self.open_grader)
-        exit_btn.clicked.connect(QApplication.instance().quit)
-        uninstall_btn.clicked.connect(self.uninstall_app_data)
-
         layout.addWidget(admin_btn)
         layout.addWidget(grader_btn)
-        layout.addWidget(exit_btn)
-        layout.addWidget(uninstall_btn)
+        layout.addStretch(2)
+
+        # Backup options bar
+        backup_options_bar = QHBoxLayout()
+        uninstall_btn = QPushButton("Uninstall")
+        readme_show_btn = QPushButton("View README")
+        backup_options_bar.addWidget(readme_show_btn)
+        backup_options_bar.addWidget(uninstall_btn)
+        layout.addLayout(backup_options_bar)
+        
+        # Connect buttons
+        admin_btn.clicked.connect(self.open_admin)
+        grader_btn.clicked.connect(self.open_grader)
+        readme_show_btn.clicked.connect(self.show_readme)
+        uninstall_btn.clicked.connect(self.uninstall_app_data)
+
 
     def open_admin(self):
         self.admin_window = AdminLanding(parent_window=self)
@@ -84,3 +102,22 @@ class LandingPage(QWidget):
         reveal_app_bundle_in_finder()
 
         QApplication.quit()
+
+    def show_readme(self):
+        readme_path = os.path.join(get_app_support_resources_dir(), "README.txt")
+        try:
+            with open(readme_path, "r") as f:
+                readme_content = f.read()
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Could not load README:\n\n{e}"
+            )
+            return
+
+        QMessageBox.information(
+            self,
+            "README",
+            readme_content
+        )
