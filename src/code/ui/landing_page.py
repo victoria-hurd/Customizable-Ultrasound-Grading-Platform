@@ -14,9 +14,9 @@ class LandingPage(QWidget):
         # Top bar for exit button
         exit_bar = QHBoxLayout()
         exit_btn = QPushButton("Exit")
-        exit_bar.addStretch(5)
         exit_btn.clicked.connect(QApplication.instance().quit)
         exit_bar.addWidget(exit_btn)
+        exit_bar.addStretch(5)
         layout.addLayout(exit_bar)
 
         # Title and welcome screen
