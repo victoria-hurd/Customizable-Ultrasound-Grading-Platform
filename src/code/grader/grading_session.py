@@ -156,8 +156,8 @@ class GradingSessionTab(QWidget):
         scroll_widget.setLayout(self.question_layout)
 
         scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(scroll_widget)
+        scroll_area.setWidgetResizable(True)
 
         question_container.addWidget(scroll_area)
 
@@ -261,7 +261,9 @@ class GradingSessionTab(QWidget):
                 self.question_layout.addWidget(placeholder)
                 self.radio_groups.append((q['question_text'], None))
 
+            #self.question_layout.addStretch()
 
+        self.question_layout.addStretch()
         self.progress_bar.setValue(self.current_index)
         self.progress_label.setText(f"Video {self.current_index+1} of {len(self.grade_df)}")
 
