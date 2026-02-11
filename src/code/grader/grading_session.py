@@ -218,11 +218,26 @@ class GradingSessionTab(QWidget):
 
     def load_current_video(self):
 
+        # Clear previous radio selections, if they exist
+        if hasattr(self, "radio_groups"):
+            for _, group in self.radio_groups:
+                if group is not None:
+                    group.setExclusive(False)
+                    for btn in group.buttons():
+                        btn.setChecked(False)
+                    group.setExclusive(True)
+
         # Clear previous questions
         while self.question_layout.count():
             item = self.question_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+            elif item.layout():
+                while item.layout().count():
+                    sub_item = item.layout().takeAt(0)
+                    if sub_item.widget():
+                        sub_item.widget().deleteLater()
+                item.layout().deleteLater()
 
         row = self.grade_df.iloc[self.current_index]
         video_path = os.path.join(self.study_folder, "Raw Data", row["deidentified_filename"])
@@ -260,8 +275,6 @@ class GradingSessionTab(QWidget):
                 placeholder.setStyleSheet("border: 1px solid black; padding: 5px;")
                 self.question_layout.addWidget(placeholder)
                 self.radio_groups.append((q['question_text'], None))
-
-            #self.question_layout.addStretch()
 
         self.question_layout.addStretch()
         self.progress_bar.setValue(self.current_index)
@@ -308,7 +321,8 @@ class GradingSessionTab(QWidget):
             # If grading is complete, show post-grading UI
             self.show_post_ui()
         else:
-            # Otherwise, load next video
+            # Otherwise, clear items and load next video
+            #self.clear_button_groups()
             self.load_current_video()
 
     # ---------------- Exit Grading ----------------
@@ -339,3 +353,20 @@ class GradingSessionTab(QWidget):
         if self.parent_window:
             self.parent_window.show()  # show the grader landing page
         self.close()
+
+    def clear_button_groups(self):
+        # Unselect previous questions
+        for btn_group in self.radio_groups:
+            print(btn_group)
+            btn_group = QButtonGroup(btn_group)
+            print(btn_group)
+            if btn_group is None:
+                continue  # Annotation later
+            # Temporarily disable exclusivity
+            btn_group.setExclusive(False)
+            # Uncheck checked button
+            checked_button = btn_group.checkedButton()
+            if checked_button:
+                checked_button.setChecked(False)
+            # Re-enable
+            btn_group.setExclusive(True)
