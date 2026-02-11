@@ -44,13 +44,13 @@ class LandingPage(QWidget):
             self,
             "Remove All App Data",
             (
-                "This will permanently delete all Ultrasound Grader data,\n\n"
-                "including:\n"
-                "• All studies\n"
-                "• All grader results\n"
-                "• All settings\n\n"
+                "This will permanently delete all Ultrasound Grader data that has not been saved to Downloads or backed up outside of the app, including:\n\n"
+                "• All created studies and associated metadata\n"
+                "• All study results\n"
+                "• All grader requests\n"
+                "• All graded data\n\n"
                 "This action cannot be undone.\n\n"
-                "Do you want to continue?"
+                "Continue with uninstall?"
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
             QMessageBox.StandardButton.Cancel
@@ -68,9 +68,6 @@ class LandingPage(QWidget):
                 f"Could not remove app data:\n\n{e}"
             )
             return
-        
-        # Reveal the app in Finder so the user can delete it
-        reveal_app_bundle_in_finder()
 
         QMessageBox.information(
             self,
@@ -82,5 +79,8 @@ class LandingPage(QWidget):
                 "The app will now quit."
             )
         )
+
+        # Reveal the app in Finder so the user can delete it
+        reveal_app_bundle_in_finder()
 
         QApplication.quit()
