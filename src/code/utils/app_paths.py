@@ -72,7 +72,7 @@ def ensure_app_directories():
         if instructions_src.is_dir():
             shutil_copyfolder(
                 instructions_src,
-                resources_dir / "Resources",
+                resources_dir,
                 dirs_exist_ok=True
             )
     # ---------- Admin Studies ----------
