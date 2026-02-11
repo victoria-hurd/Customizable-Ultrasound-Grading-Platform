@@ -1,11 +1,11 @@
 mkdir ./installers/arm64_installer/
 mkdir ./installers/x86_installer/
 
-cp ./installers/assets/README.txt ./installers/arm64_installer/README.txt
+cp ./src/app_resources/README.txt ./installers/arm64_installer/README.txt
 cp -R ./dist/Ultrasound_Grader_arm64.app "./installers/arm64_installer/Ultrasound Grader (Apple Silicon).app"
 ln -s /Applications ./installers/arm64_installer/Applications
 
-cp ./installers/assets/README.txt ./installers/x86_installer/README.txt
+cp ./src/app_resources/README.txt ./installers/x86_installer/README.txt
 cp -R ./dist/Ultrasound_Grader_x86.app "./installers/x86_installer/Ultrasound Grader (Intel).app"
 ln -s /Applications ./installers/x86_installer/Applications
 
