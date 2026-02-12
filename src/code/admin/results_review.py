@@ -88,14 +88,28 @@ class ReviewResultsWindow(QWidget):
             for f in os.listdir(grader_files_dir)
             if f.endswith(".csv")
         ]
-
         if not files:
-            QMessageBox.warning(self, "No Files", "No grader files found to analyze.")
-            return
+                    QMessageBox.warning(self, "No Files", "No grader files found to analyze.")
+                    return
 
         # Concatenate all grader files and store for download
         all_dfs = [pd_read_csv(f) for f in files]
         df_all = pd_concat(all_dfs, ignore_index=True)
+
+        grade_request_file = list(Path(self.study_path).glob("all_grader_requests*.csv"))[0]
+        if os.path.exists(grade_request_file):
+            df_request = pd_read_csv(grade_request_file)
+            # Match original filenames to deidentified names in grader files
+            filename_mapping = dict(zip(df_request['deidentified_filename'], df_request['original_filename']))
+            df_all['original_filename'] = df_all['deidentified_filename'].map(filename_mapping)
+            # Move original filename column to the front
+            cols = df_all.columns.tolist()
+            cols.insert(0, cols.pop(cols.index('original_filename')))
+            df_all = df_all[cols]
+        else:
+            QMessageBox.critical(self, "Error", f"Original grade request CSV not found for {grade_request_file}. Cannot match original filenames to deidentified names.")
+            return
+        
         self.concat_df = df_all  # store in self for download
 
         # generate question column names from metadata
