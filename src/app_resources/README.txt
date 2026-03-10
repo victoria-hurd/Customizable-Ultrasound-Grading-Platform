@@ -1,6 +1,7 @@
 Ultrasound Grader README
 Author: Victoria Hurd
 Last Edited: 2/11/2026
+App Version: 1.0
 
 There are two versions of the Ultrasound Grader app:
 1. "Ultrasound Grader (Apple Silicon).app"
