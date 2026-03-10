@@ -500,8 +500,8 @@ class CreateStudyTab(QWidget):
                     grader_folder,
                     f"{grader}_{study_name}_grade_request.csv"
                 )
-
-                grader_df.to_csv(grader_csv_path, index=False)
+                grader_df_shuffled = grader_df.sample(frac=1) # randomly shuffle assignments
+                grader_df_shuffled.to_csv(grader_csv_path, index=False)
 
                 # Copy over the metadata file
                 metadata_file = os.path.join(self.current_study_folder, "study_metadata.json")
