@@ -40,6 +40,7 @@ class VideoPlayer(QWidget):
         self.media_player.stop()
         if self.autoplay_toggle.isChecked():
             self.media_player.play()
+            self.embedded_data.log_play()
 
     def play(self): 
         if self.media_player.position() >= self.media_player.duration() - 5:
