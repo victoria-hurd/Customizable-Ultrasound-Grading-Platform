@@ -28,7 +28,7 @@ class GradingSessionTab(QWidget):
         self.grade_data_path = os.path.join(output_dir, f"{self.grader_name}_{self.study_name}_grade_data.csv")
         self.grade_df = pd_read_csv(self.grade_data_path)
         # Convert all columns to string type (object dtype in older pandas versions)
-        self.grade_df = self.grade_df.astype(str)
+        #self.grade_df = self.grade_df.astype(str)
         self.answers = {}
 
         self._build_ui()
@@ -47,7 +47,9 @@ class GradingSessionTab(QWidget):
         for q in self.questions:
             # Question label
             self.q_cols.append(f"{q['question_text']}")
-        completed_reviews = self.grade_df.dropna(subset=self.q_cols).shape[0]
+        total_reviews = len(self.grade_df)
+        completed_reviews = total_reviews - sum(self.grade_df[self.q_cols].isna().any(axis=1))
+        self.current_index = completed_reviews
         study_info_label = QLabel()
 
         # Metadata display
@@ -212,7 +214,12 @@ class GradingSessionTab(QWidget):
         self.welcome_widget.setVisible(False)
         self.grading_widget.setVisible(True)
         # generate question column names
-        self.current_index = self.grade_df[self.q_cols].isna().any(axis=1).idxmax()
+        #self.current_index = self.grade_df[self.q_cols].isna().any(axis=1).idxmax()
+        #self.current_index = self.grade_df.dropna(subset=self.q_cols).shape[0]
+        print("Current index for grading:", self.current_index)
+        print("Grade DataFrame shape:", self.grade_df.shape)
+        print("Grade DataFrame columns:", self.grade_df.columns)
+        print("Grade DataFrame head:\n", self.grade_df.head())
         self.progress_bar.setMaximum(len(self.grade_df))
         self.load_current_video()
 
