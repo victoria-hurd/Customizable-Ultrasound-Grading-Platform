@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 
 from code.grader.video_player import VideoPlayer
 from code.utils.app_paths import move_without_overwrite,get_app_support_resources_dir
+from code.grader.log_embedded import EmbeddedDataLogger
 
 class GradingSessionTab(QWidget):
     def __init__(self,
@@ -32,9 +33,7 @@ class GradingSessionTab(QWidget):
         self.pause_enabled = loaded_metadata['controls']['enable_pause']
         self.scrubbing_enabled = loaded_metadata['controls']['enable_scrubbing']
         self.rewatches_enabled = loaded_metadata['controls']['enable_rewatches']
-        # Convert all columns to string type (object dtype in older pandas versions)
-        #self.grade_df = self.grade_df.astype(str)
-        self.answers = {}
+        self.embedded_logger = EmbeddedDataLogger()
 
         self._build_ui()
 
@@ -132,7 +131,10 @@ class GradingSessionTab(QWidget):
             toggles_layout.addWidget(self.autoplay_toggle)
 
         # Video player
-        self.video_player = VideoPlayer(replay_toggle=self.replay_toggle,autoplay_toggle=self.autoplay_toggle,rewatch_enabled=self.rewatches_enabled)
+        self.video_player = VideoPlayer(replay_toggle=self.replay_toggle,
+                                        autoplay_toggle=self.autoplay_toggle,
+                                        rewatch_enabled=self.rewatches_enabled,
+                                        embedded_data=self.embedded_logger)
         video_container.addWidget(self.video_player,stretch=3)
 
         # Connect controls to functions
@@ -243,6 +245,9 @@ class GradingSessionTab(QWidget):
         self.load_current_video()
 
     def load_current_video(self):
+        row = self.grade_df.iloc[self.current_index]
+        self.embedded_logger.reset()  # Reset logger for new video
+        self.embedded_logger.start_review()
         # Re-enable play button in case it was disabled for non-rewatch mode
         self.play_btn.setEnabled(True)
         # Clear previous radio selections, if they exist
@@ -266,7 +271,6 @@ class GradingSessionTab(QWidget):
                         sub_item.widget().deleteLater()
                 item.layout().deleteLater()
 
-        row = self.grade_df.iloc[self.current_index]
         video_path = os.path.join(self.study_folder, "Raw Data", row["deidentified_filename"])
         if not os.path.exists(video_path):
             QMessageBox.warning(self, "Video Missing", f"Video not found: {video_path}")
@@ -308,8 +312,13 @@ class GradingSessionTab(QWidget):
         self.progress_label.setText(f"Video {self.current_index+1} of {len(self.grade_df)}")
 
     def save_and_next(self):
+        self.embedded_logger.end_review( 
+            self.replay_toggle.isChecked(),
+            self.autoplay_toggle.isChecked())  # End review and calculate duration
+        embedded_row = self.embedded_logger.to_dict()
+        print("Embedded data for this review:", embedded_row)  # Debug print
         row_index = self.current_index
-    # Collect answers
+        # Collect answers
         for q_id, btn_group in self.radio_groups:
             if btn_group is None:
                 continue  # Annotation later
@@ -325,6 +334,10 @@ class GradingSessionTab(QWidget):
 
             # Write directly into the existing column
             self.grade_df.at[row_index, q_id] = str(selected.text())
+
+        # Write metadata into grade_df
+        for key, value in embedded_row.items():
+            self.grade_df.at[row_index, key] = value
 
         # Try/Except block for filesystem operations
         try:

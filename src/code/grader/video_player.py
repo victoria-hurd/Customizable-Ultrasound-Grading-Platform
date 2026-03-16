@@ -4,11 +4,12 @@ from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSlider
 
 class VideoPlayer(QWidget):
-    def __init__(self, replay_toggle=None, autoplay_toggle=None, rewatch_enabled=True, parent=None):
+    def __init__(self, replay_toggle=None, autoplay_toggle=None, rewatch_enabled=True, parent=None, embedded_data=None):
         super().__init__(parent)
         self.replay_toggle = replay_toggle
         self.autoplay_toggle = autoplay_toggle
         self.rewatch_enabled = rewatch_enabled
+        self.embedded_data = embedded_data
 
         # Media Player
         self.media_player = QMediaPlayer()
@@ -44,9 +45,11 @@ class VideoPlayer(QWidget):
         if self.media_player.position() >= self.media_player.duration() - 5:
             self.media_player.setPosition(0)
         self.media_player.play()
+        self.embedded_data.log_play()
 
     def pause(self):
         self.media_player.pause()
+        self.embedded_data.log_pause()
 
     # ---------------- Slider ----------------
     def set_slider(self, slider: QSlider):
@@ -63,6 +66,7 @@ class VideoPlayer(QWidget):
             self.slider.setValue(position)
 
     def _slider_moved(self, position):
+        self.embedded_data.log_scrub()
         self.media_player.setPosition(position)
 
     def _handle_media_status(self, status):
@@ -70,10 +74,10 @@ class VideoPlayer(QWidget):
             if self.replay_toggle.isChecked():
                 self.media_player.setPosition(0)
                 self.media_player.play()
+                self.embedded_data.log_replay()
             elif not self.rewatch_enabled:
                 self.media_player.setPosition(self.media_player.duration())
                 self.media_player.stop()
             else:
                 self.media_player.pause()
                 self.media_player.setPosition(self.media_player.duration())
-
