@@ -75,5 +75,11 @@
                 "No view"
             ]
         }
-    ]
+    ],
+    "controls": {
+        "enable_replay": true,
+        "enable_autoplay": true,
+        "enable_pause": true,
+        "enable_scrubbing": true
+    }
 }
