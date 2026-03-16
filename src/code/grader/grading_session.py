@@ -27,6 +27,11 @@ class GradingSessionTab(QWidget):
         output_dir = os.path.join(self.study_folder, "Output Grade Data")
         self.grade_data_path = os.path.join(output_dir, f"{self.grader_name}_{self.study_name}_grade_data.csv")
         self.grade_df = pd_read_csv(self.grade_data_path)
+        self.autoplay_enabled = loaded_metadata['controls']['enable_autoplay']
+        self.replay_enabled = loaded_metadata['controls']['enable_replay']
+        self.pause_enabled = loaded_metadata['controls']['enable_pause']
+        self.scrubbing_enabled = loaded_metadata['controls']['enable_scrubbing']
+        self.rewatches_enabled = loaded_metadata['controls']['enable_rewatches']
         # Convert all columns to string type (object dtype in older pandas versions)
         #self.grade_df = self.grade_df.astype(str)
         self.answers = {}
@@ -121,15 +126,20 @@ class GradingSessionTab(QWidget):
 
         # Add toggles to vertical layout
         toggles_layout = QVBoxLayout()
-        toggles_layout.addWidget(self.replay_toggle)
-        toggles_layout.addWidget(self.autoplay_toggle)
+        if self.replay_enabled:
+            toggles_layout.addWidget(self.replay_toggle)
+        if self.autoplay_enabled:
+            toggles_layout.addWidget(self.autoplay_toggle)
 
         # Video player
-        self.video_player = VideoPlayer(replay_toggle=self.replay_toggle,autoplay_toggle=self.autoplay_toggle)
+        self.video_player = VideoPlayer(replay_toggle=self.replay_toggle,autoplay_toggle=self.autoplay_toggle,rewatch_enabled=self.rewatches_enabled)
         video_container.addWidget(self.video_player,stretch=3)
 
         # Connect controls to functions
-        self.play_btn.clicked.connect(self.video_player.play)
+        if self.rewatches_enabled:
+            self.play_btn.clicked.connect(self.video_player.play)
+        elif not self.rewatches_enabled:
+            self.play_btn.clicked.connect(self.play_and_disable)
         self.pause_btn.clicked.connect(self.video_player.pause)
         self.next_btn.clicked.connect(self.save_and_next)
 
@@ -137,11 +147,13 @@ class GradingSessionTab(QWidget):
         self.replay_toggle.setChecked(False)
         self.autoplay_toggle.setChecked(False)
 
-        # Add controls to layout
-        controls_layout.addLayout(toggles_layout)
+        # Add controls to layout, based on enabled settings
+        if self.replay_enabled or self.autoplay_enabled:
+            controls_layout.addLayout(toggles_layout)
         controls_layout.addStretch()
         controls_layout.addWidget(self.play_btn)
-        controls_layout.addWidget(self.pause_btn)
+        if self.pause_enabled:
+            controls_layout.addWidget(self.pause_btn)
         controls_layout.addStretch()
         controls_layout.addWidget(self.next_btn)
         video_container.addLayout(controls_layout)
@@ -149,9 +161,10 @@ class GradingSessionTab(QWidget):
         # Scrubbing slider
         self.scrub_slider = QSlider(Qt.Orientation.Horizontal)
         self.scrub_slider.setMinimum(0)
-        #self.scrub_slider.setMaximum(100)  # We'll update dynamically based on video length
         video_container.addWidget(self.scrub_slider)
         self.video_player.set_slider(self.scrub_slider)
+        if not self.scrubbing_enabled:
+            self.scrub_slider.setDisabled(True)
 
         # Progress bar at the bottom of video container
         progress_layout = QHBoxLayout()
@@ -230,7 +243,8 @@ class GradingSessionTab(QWidget):
         self.load_current_video()
 
     def load_current_video(self):
-
+        # Re-enable play button in case it was disabled for non-rewatch mode
+        self.play_btn.setEnabled(True)
         # Clear previous radio selections, if they exist
         if hasattr(self, "radio_groups"):
             for _, group in self.radio_groups:
@@ -337,6 +351,10 @@ class GradingSessionTab(QWidget):
             # Otherwise, clear items and load next video
             #self.clear_button_groups()
             self.load_current_video()
+
+    def play_and_disable(self):
+        self.video_player.play()
+        self.play_btn.setEnabled(False)
 
     # ---------------- Exit Grading ----------------
     def show_post_ui(self):

@@ -108,6 +108,7 @@ class GraderLanding(QWidget):
             return
         
         self.study_name = self.loaded_metadata['study_name']
+        self.controls = self.loaded_metadata['controls']
 
         # Read grader request file
         grade_request_file = list(Path(self.current_study_path).glob("*_grade_request.csv"))[0]
@@ -163,7 +164,8 @@ class GraderLanding(QWidget):
             f"Total Requested Reviews: {self.total_reviews}\n"
             f"Completed Reviews: {self.completed_reviews}\n"
             f"Questions per Review: {len(self.loaded_metadata['questions'])}\n"
-            f"Study Location: {self.current_study_path}"
+            f"Study Location: {self.current_study_path}\n"
+            f"Controls Settings: {self.controls}"
         )
         self.study_info_label.setWordWrap(True)
 

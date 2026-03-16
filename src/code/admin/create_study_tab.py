@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QScrollArea, QGroupBox, QMessageBox,
                              QListWidget, QRadioButton, QSpinBox,
                              QButtonGroup, QProgressBar, QFrame,
-                             QApplication)
+                             QApplication, QCheckBox)
 from PyQt6.QtCore import pyqtSignal, Qt 
 from zipfile import ZipFile
 from pathlib import Path
@@ -114,12 +114,36 @@ class CreateStudyTab(QWidget):
         question_layout.addWidget(scroll)
         question_box.setLayout(question_layout)
 
+        # Add area to select which controls should be available for graders
+        controls_box = QVBoxLayout()
+        controls_box.addWidget(QLabel("Select Grader Interface Controls"))
+        controls_options = QHBoxLayout()
+        self.enable_replay_checkbox = QCheckBox("Enable Replay")
+        self.enable_autoplay_checkbox = QCheckBox("Enable Autoplay")
+        self.enable_pause_checkbox = QCheckBox("Enable Pause")
+        self.enable_scrubbing_checkbox = QCheckBox("Enable Scrubbing")
+        self.enable_rewatches_checkbox = QCheckBox("Allow Multiple Watches of Same Video")
+        controls_options.addWidget(self.enable_replay_checkbox)
+        controls_options.addWidget(self.enable_autoplay_checkbox)
+        controls_options.addWidget(self.enable_pause_checkbox)
+        controls_options.addWidget(self.enable_scrubbing_checkbox)
+        controls_options.addWidget(self.enable_rewatches_checkbox)
+        controls_box.addLayout(controls_options)
+
+        # Default settings
+        self.enable_replay_checkbox.setChecked(True)
+        self.enable_autoplay_checkbox.setChecked(True)
+        self.enable_pause_checkbox.setChecked(True)
+        self.enable_scrubbing_checkbox.setChecked(True)
+        self.enable_rewatches_checkbox.setChecked(True)
+
         # Create main layout
         content_layout.addWidget(study_box)
         content_layout.addWidget(grader_box)
         content_layout.addWidget(split_box)
         content_layout.addWidget(summary_box)
         content_layout.addWidget(question_box)
+        content_layout.addLayout(controls_box)
         content_layout.addStretch()
 
         # Create scroll area for content
@@ -227,6 +251,10 @@ class CreateStudyTab(QWidget):
         if not media_files:
             QMessageBox.warning(self, "No Files", "No valid image/video files found in folder.")
             return
+        
+        if self.enable_replay_checkbox.isChecked() and not self.enable_rewatches_checkbox.isChecked():
+            QMessageBox.warning(self, "Incompatible Controls", "Replay cannot be toggled on if multiple rewatches is toggled off. Suggested fix: uncheck Enable Replay.")
+            return
 
         # Try/Except block for filesystem operations
         try:
@@ -295,7 +323,15 @@ class CreateStudyTab(QWidget):
                 "graders": graders,
                 "assignment_mode": assignment["mode"],
                 "repeat_count": repeat_count,
-                "questions": questions
+                "questions": questions,
+                "controls": {
+                    "enable_replay": self.enable_replay_checkbox.isChecked(),
+                    "enable_autoplay": self.enable_autoplay_checkbox.isChecked(),
+                    "enable_pause": self.enable_pause_checkbox.isChecked(),
+                    "enable_scrubbing": self.enable_scrubbing_checkbox.isChecked(),
+                    "enable_rewatches": self.enable_rewatches_checkbox.isChecked()
+                }
+
             }
             metadata_path = os.path.join(self.source_study_path, "study_metadata.json")
             with open(metadata_path, "w") as f:
@@ -421,11 +457,19 @@ class CreateStudyTab(QWidget):
         if assignment["repeat"]:
             grader_assign += f"Repeat enabled: {repeat_count}x"
 
+        # Controls summary below
+        controls_assign = "Controls settings:\n"
+        controls_assign += f"  Enable Replay: {self.enable_replay_checkbox.isChecked()}\n"
+        controls_assign += f"  Enable Autoplay: {self.enable_autoplay_checkbox.isChecked()}\n"
+        controls_assign += f"  Enable Pause: {self.enable_pause_checkbox.isChecked()}\n"
+        controls_assign += f"  Enable Scrubbing: {self.enable_scrubbing_checkbox.isChecked()}\n"
+        controls_assign += f"  Allow Rewatches: {self.enable_rewatches_checkbox.isChecked()}\n"
+
         # Create label for next step information
         info_str = "\nThe next step is to create grader release folders, which contain the media assigned to each grader and a per-grader master spreadsheet. These folders are zipped such that they can be sent to graders for review, named accordingly based on the provided grader names. Note that the images will be presented in a randomized, deidentified manner. \n"
         
         # Create widget
-        success_widget = QLabel(success_str+summary_str+grader_assign+info_str)
+        success_widget = QLabel(success_str+summary_str+grader_assign+controls_assign+info_str)
         success_widget.setWordWrap(True)
         success_widget.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
@@ -604,6 +648,11 @@ class CreateStudyTab(QWidget):
         # Populate fields
         self.study_name_input.setText(metadata.get("study_name", ""))
         self.image_folder_label.setText(metadata.get("data_folder", ""))
+        self.enable_replay_checkbox.setChecked(metadata.get("enable_replay", True))
+        self.enable_autoplay_checkbox.setChecked(metadata.get("enable_autoplay", True))
+        self.enable_pause_checkbox.setChecked(metadata.get("enable_pause", True))
+        self.enable_scrubbing_checkbox.setChecked(metadata.get("enable_scrubbing", True))
+        self.enable_rewatches_checkbox.setChecked(metadata.get("enable_rewatches", True))
 
         # Populate graders
         graders = metadata.get("graders", [])

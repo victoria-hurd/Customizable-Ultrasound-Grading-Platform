@@ -4,10 +4,11 @@ from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSlider
 
 class VideoPlayer(QWidget):
-    def __init__(self, replay_toggle=None, autoplay_toggle=None, parent=None):
+    def __init__(self, replay_toggle=None, autoplay_toggle=None, rewatch_enabled=True, parent=None):
         super().__init__(parent)
         self.replay_toggle = replay_toggle
         self.autoplay_toggle = autoplay_toggle
+        self.rewatch_enabled = rewatch_enabled
 
         # Media Player
         self.media_player = QMediaPlayer()
@@ -69,6 +70,9 @@ class VideoPlayer(QWidget):
             if self.replay_toggle.isChecked():
                 self.media_player.setPosition(0)
                 self.media_player.play()
+            elif not self.rewatch_enabled:
+                self.media_player.setPosition(self.media_player.duration())
+                self.media_player.stop()
             else:
                 self.media_player.pause()
                 self.media_player.setPosition(self.media_player.duration())
