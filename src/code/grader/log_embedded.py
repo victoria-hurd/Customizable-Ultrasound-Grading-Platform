@@ -35,14 +35,12 @@ class EmbeddedDataLogger:
         self.autoplay_enabled = autoplay_status
 
     def log_pause(self):
-        print("Logging pause event")
         self.pause_count += 1
         if self.last_play_start:
             self.total_watch_time += time.time() - self.last_play_start
             self.last_play_start = None
 
     def log_play(self):
-        print("Logging play event")
         self.play_count += 1
         self.last_play_start = time.time()
 
