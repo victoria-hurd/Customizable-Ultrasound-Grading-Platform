@@ -5,7 +5,7 @@ from pandas import read_csv as pd_read_csv
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QScrollArea, QProgressBar, 
                              QRadioButton, QButtonGroup, QSlider, 
-                             QMessageBox, QApplication)
+                             QMessageBox, QApplication, QCheckBox)
 
 from code.grader.video_player import VideoPlayer
 from code.utils.app_paths import move_without_overwrite,get_app_support_resources_dir
@@ -213,13 +213,6 @@ class GradingSessionTab(QWidget):
         self.showMaximized()
         self.welcome_widget.setVisible(False)
         self.grading_widget.setVisible(True)
-        # generate question column names
-        #self.current_index = self.grade_df[self.q_cols].isna().any(axis=1).idxmax()
-        #self.current_index = self.grade_df.dropna(subset=self.q_cols).shape[0]
-        print("Current index for grading:", self.current_index)
-        print("Grade DataFrame shape:", self.grade_df.shape)
-        print("Grade DataFrame columns:", self.grade_df.columns)
-        print("Grade DataFrame head:\n", self.grade_df.head())
         self.progress_bar.setMaximum(len(self.grade_df))
         self.load_current_video()
 
