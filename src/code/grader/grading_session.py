@@ -111,21 +111,34 @@ class GradingSessionTab(QWidget):
         exit_layout.addStretch()
         video_container.addLayout(exit_layout)
 
-        # Video player
-        self.video_player = VideoPlayer()
-        video_container.addWidget(self.video_player,stretch=3)
-
         # Video controls
         controls_layout = QHBoxLayout()
         self.play_btn = QPushButton("Play")
         self.pause_btn = QPushButton("Pause")
         self.next_btn = QPushButton("Save Grades and Advance to Next Video")
-        self.next_btn.clicked.connect(self.save_and_next)
+        self.replay_toggle = QCheckBox("Auto-Replay After Video Ends")
+        self.autoplay_toggle = QCheckBox("Auto-Play After Advance")
 
-        # Connect play/pause buttons
+        # Add toggles to vertical layout
+        toggles_layout = QVBoxLayout()
+        toggles_layout.addWidget(self.replay_toggle)
+        toggles_layout.addWidget(self.autoplay_toggle)
+
+        # Video player
+        self.video_player = VideoPlayer(replay_toggle=self.replay_toggle,autoplay_toggle=self.autoplay_toggle)
+        video_container.addWidget(self.video_player,stretch=3)
+
+        # Connect controls to functions
         self.play_btn.clicked.connect(self.video_player.play)
         self.pause_btn.clicked.connect(self.video_player.pause)
+        self.next_btn.clicked.connect(self.save_and_next)
 
+        # Default settings
+        self.replay_toggle.setChecked(False)
+        self.autoplay_toggle.setChecked(False)
+
+        # Add controls to layout
+        controls_layout.addLayout(toggles_layout)
         controls_layout.addStretch()
         controls_layout.addWidget(self.play_btn)
         controls_layout.addWidget(self.pause_btn)
