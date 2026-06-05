@@ -31,6 +31,7 @@ class LandingPage(QWidget):
         layout.addWidget(admin_btn)
         layout.addWidget(grader_btn)
         layout.addStretch(2)
+        changes
 
         # Backup options bar
         backup_options_bar = QHBoxLayout()
